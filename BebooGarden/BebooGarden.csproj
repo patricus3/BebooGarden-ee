@@ -10,7 +10,10 @@
 		<Product>Beboo Garden: Enhanced Edition</Product>
 		<AssemblyTitle>Beboo Garden: Enhanced Edition</AssemblyTitle>
 		<Company>Saladeuh</Company>
+		<!-- Assembly versions must be numeric; the name of the build is the informational
+		     one, and that is what the installer and the apk show. -->
 		<Version>3.0.0</Version>
+		<InformationalVersion>3.0b1</InformationalVersion>
 	</PropertyGroup>
 	<PropertyGroup>
 		<ApplicationManifest>app.manifest</ApplicationManifest>

@@ -25,7 +25,10 @@
 
 #define AppName "Beboo Garden: Enhanced Edition"
 #define AppShortName "Beboo Garden"
-#define AppVersion "3.0.0"
+#define AppVersion "3.0b1"
+; Windows will only take four numbers in a file version resource, so a release named
+; 3.0b1 needs a numeric one alongside the name people actually see.
+#define AppVersionNumeric "3.0.0.0"
 #define AppPublisher "Saladeuh"
 #define AppURL "https://github.com/Saladeuh/BebooGarden"
 #define AppExe "BebooGarden.exe"
@@ -53,7 +56,7 @@ AppPublisher={#AppPublisher}
 AppPublisherURL={#AppURL}
 AppSupportURL={#AppURL}
 AppUpdatesURL={#AppURL}
-VersionInfoVersion={#AppVersion}
+VersionInfoVersion={#AppVersionNumeric}
 VersionInfoProductName={#AppName}
 
 ; All users by default. Anyone without administrator rights is offered a just-for-me install

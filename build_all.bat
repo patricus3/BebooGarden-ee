@@ -35,7 +35,9 @@ rem thing nobody notices until a player reports a bug against the wrong build.
 rem No pipes and no double quotes inside these one-liners on purpose: cmd's parser
 rem mangles both inside for /f backquotes, and the error lands in PowerShell where
 rem it makes no sense.
-for /f "usebackq delims=" %%v in (`powershell -NoProfile -Command "[xml]$x=Get-Content 'BebooGarden\BebooGarden.csproj'; @($x.Project.PropertyGroup.Version)[0]"`) do set "GAMEVER=%%v"
+rem InformationalVersion when there is one, because that is the name of the build - a release may
+rem be called 3.0b1, and an assembly version may not have a letter in it.
+for /f "usebackq delims=" %%v in (`powershell -NoProfile -Command "[xml]$x=Get-Content 'BebooGarden\BebooGarden.csproj'; $i=@($x.Project.PropertyGroup.InformationalVersion); $n=@($x.Project.PropertyGroup.Version); if ($i.Count -gt 0 -and $i[0]) { $i[0] } else { $n[0] }"`) do set "GAMEVER=%%v"
 for /f "usebackq delims=" %%v in (`powershell -NoProfile -Command "$l=@(Select-String -Path 'installer\BebooGarden.iss' -Pattern '^#define AppVersion')[0].Line; $l.Split([char]34)[1]"`) do set "ISSVER=%%v"
 
 echo.
