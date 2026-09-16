@@ -219,8 +219,12 @@ public class SoundSystem
   private List<Sound> LoadVoiceFolder(string path)
   {
     List<Sound> sounds = [];
-    if (!Directory.Exists(path)) return sounds;
-    foreach (string file in Directory.GetFiles(path))
+    // Case-insensitively, because the voice folders are named after the BebooType enum and do not
+    // all match its capitals - "base" and "green" against Base and Green. Windows never noticed;
+    // Android left most beboos mute, and silently, since a missing folder is tolerated for mods.
+    string? resolved = ContentPath.ResolveDirectory(path);
+    if (resolved is null) return sounds;
+    foreach (string file in Directory.GetFiles(resolved))
     {
       try
       {
@@ -460,7 +464,8 @@ public class SoundSystem
 
   public void LoadAmbiSounds()
   {
-    string[] files = Directory.GetFiles(CONTENTFOLDER + "sounds/birds/", "*.*");
+    string? birds = ContentPath.ResolveDirectory(CONTENTFOLDER + "sounds/birds/");
+    string[] files = birds is null ? [] : Directory.GetFiles(birds, "*.*");
     foreach (string file in files)
     {
       Sound sound = System.CreateSound(file, Mode._3D | Mode._3D_LinearSquareRolloff);

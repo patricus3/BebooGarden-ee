@@ -15,7 +15,8 @@ public class MusicBox : Item
 {
   static MusicBox()
   {
-    string[] files = Directory.GetFiles(SoundSystem.CONTENTFOLDER + "music/musicbox/", "*.mp3",
+    string? rolls = ContentPath.ResolveDirectory(SoundSystem.CONTENTFOLDER + "music/musicbox/");
+    string[] files = rolls is null ? [] : Directory.GetFiles(rolls, "*.mp3",
         SearchOption.AllDirectories);
     AllRolls = new Roll[files.Length];
     int i = 0;
