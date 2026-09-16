@@ -544,23 +544,17 @@ public class SoundSystem
     if (volume != -1) ball.Channel.Volume = volume;
   }
 
-  public void PlayBebooSound(Sound sound, Beboo beboo, bool stopOthers = true)
+  public void PlayBebooSound(Sound sound, Beboo beboo, bool isVoice = true)
+      => PlayForBeboo(sound, beboo, isVoice, -1, isVoice ? 0 : -0.1);
+
+  public void PlayBebooSound(List<Sound> sounds, Beboo beboo, bool isVoice = true, float volume = -1)
   {
-    if (beboo.Paused) return;
-    if (beboo.Channel != null && stopOthers && beboo.Channel.IsPlaying) beboo.Channel.Stop();
-    beboo.Channel = PlaySoundAtPosition(sound, beboo.VoicePosition, -0.1, beboo.VoicePitch);
+    if (beboo.Paused || sounds.Count == 0) return;
+    PlayForBeboo(sounds[GameHost.Current.Random.Next(sounds.Count)], beboo, isVoice, volume, 0);
   }
 
-  public void PlayBebooSound(List<Sound> sounds, Beboo beboo, bool stopOthers = true, float volume = -1)
-  {
-    if (beboo.Paused) return;
-    Sound sound = sounds[GameHost.Current.Random.Next(sounds.Count())];
-    if (beboo.Channel != null && stopOthers && beboo.Channel.IsPlaying) beboo.Channel.Stop();
-    beboo.Channel = PlaySoundAtPosition(sound, beboo.VoicePosition, 0, beboo.VoicePitch);
-    if (volume != -1) beboo.Channel.Volume = volume;
-  }
-
-  public void PlayBebooSound(Dictionary<string, List<Sound>> sounds, Beboo beboo, bool stopOthers = true, float volume = -1)
+  public void PlayBebooSound(
+      Dictionary<string, List<Sound>> sounds, Beboo beboo, bool isVoice = true, float volume = -1)
   {
     if (beboo.Paused) return;
     List<Sound> soundsList = GetBebooSounds(sounds, beboo);
@@ -569,10 +563,37 @@ public class SoundSystem
     // beboo tried to chirp while its voice folder had not been found. A missing voice is tolerated
     // on purpose, for mods; it should stay tolerated when the fallback is missing too.
     if (soundsList.Count == 0) return;
-    Sound sound = soundsList[GameHost.Current.Random.Next(soundsList.Count)];
-    if (beboo.Channel != null && stopOthers && beboo.Channel.IsPlaying) beboo.Channel.Stop();
-    beboo.Channel = PlaySoundAtPosition(sound, beboo.VoicePosition, 0, beboo.VoicePitch);
-    if (volume != -1) beboo.Channel.Volume = volume;
+    PlayForBeboo(soundsList[GameHost.Current.Random.Next(soundsList.Count)], beboo, isVoice, volume, 0);
+  }
+
+  /// <summary>
+  /// Plays one sound for one beboo, keeping its voice and its other noises apart.
+  ///
+  /// A beboo says one thing at a time: a new line replaces whatever it was saying, which is why a
+  /// wail cuts a chirp short rather than singing over it. Its footsteps, rustling and sleeping
+  /// breath are not its voice and never interrupt it - but they do not stack on themselves either,
+  /// so stroking a sleeping beboo answers with one breath rather than a new one every time the
+  /// stroke is noticed.
+  ///
+  /// Both used to share a single channel field, which is where the spamming and the cutting came
+  /// from: a footstep overwrote the handle on the voice, so the next line stopped the footstep and
+  /// left the previous line playing underneath it.
+  /// </summary>
+  private void PlayForBeboo(Sound sound, Beboo beboo, bool isVoice, float volume, double volumeModifier)
+  {
+    if (beboo.Paused) return;
+
+    if (isVoice)
+    {
+      if (beboo.Channel is { } speaking && speaking.IsPlaying) speaking.Stop();
+      beboo.Channel = PlaySoundAtPosition(sound, beboo.VoicePosition, volumeModifier, beboo.VoicePitch);
+      if (volume != -1) beboo.Channel.Volume = volume;
+      return;
+    }
+
+    if (beboo.EffectChannel is { } noise && noise.IsPlaying) return;
+    beboo.EffectChannel = PlaySoundAtPosition(sound, beboo.VoicePosition, volumeModifier, beboo.VoicePitch);
+    if (volume != -1) beboo.EffectChannel.Volume = volume;
   }
 
   public static List<Sound> GetBebooSounds(Dictionary<string, List<Sound>> sounds, Beboo beboo)

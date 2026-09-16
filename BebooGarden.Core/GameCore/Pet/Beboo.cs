@@ -38,7 +38,18 @@ public partial class Beboo
   private float age = 1;
   public bool BootsSlippedOn { get; set; } = false;
   public bool RubberRingSlippedOn { get; set; } = false;
+  /// <summary>
+  /// What this beboo is saying now, if anything. One voice at a time: a new one replaces it.
+  /// </summary>
   public Channel? Channel { get; set; }
+
+  /// <summary>
+  /// The noises a beboo makes that are not its voice - footsteps, rustling, the breathing it does
+  /// while asleep. Kept apart from <see cref="Channel"/> because they used to share it: every
+  /// footstep quietly overwrote the handle on whatever the beboo was saying, so the next chirp
+  /// stopped the footstep instead of the previous chirp, and the chirps piled up on each other.
+  /// </summary>
+  public Channel? EffectChannel { get; set; }
   public float VoicePitch
   {
     get => voicePitch; set
