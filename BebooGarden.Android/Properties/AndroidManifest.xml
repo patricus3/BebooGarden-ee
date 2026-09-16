@@ -25,6 +25,12 @@
   -->
   <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
-  <application android:allowBackup="true" />
+  <!--
+    The label belongs on the application, not only on the activity. The launcher shows the
+    activity's, which was right, but the app switcher and Settings show this one - and .NET Android
+    defaults it to the package id, so the game sat in both of those calling itself
+    com.patricusprod.beboo.enhanced.
+  -->
+  <application android:allowBackup="true" android:label="Beboo Garden" />
 
 </manifest>

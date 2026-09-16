@@ -239,6 +239,10 @@ public partial class Beboo
   {
     if (Happy || Happiness < CHEEREDUPAT) return;
     Happy = true;
+    // Cheering up said nothing at all, so somebody comforting a crying beboo had no way of knowing
+    // it had worked - they simply stopped hearing crying at some point. This is where the jingle
+    // belongs: it marks the beboo being alright again, which is the thing worth marking.
+    GameHost.Current.SoundSystem.System.PlaySound(GameHost.Current.SoundSystem.JingleComplete);
     CryBehaviour.Stop();
     CuteBehaviour.Start();
     MoveBehaviour.MinMS = 200;
@@ -541,7 +545,12 @@ public partial class Beboo
       if (Happiness <= 7 && (consoling || GameHost.Current.Random.Next(2) == 1))
       {
         Happiness++;
-        GameHost.Current.SoundSystem.System.PlaySound(GameHost.Current.SoundSystem.JingleComplete);
+        // The jingle marks a beboo cheering up, so it belongs at the end of that and not every few
+        // pets on the way. Sounding it over a beboo that is still crying - which is what consoling
+        // one reliably made it do - is just noise on top of the delight sound already cutting the
+        // crying short.
+        if (!consoling)
+          GameHost.Current.SoundSystem.System.PlaySound(GameHost.Current.SoundSystem.JingleComplete);
       }
 
       _petCount = 0;
