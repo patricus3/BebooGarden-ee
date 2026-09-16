@@ -189,6 +189,26 @@ public readonly struct SoundGroup
   internal readonly FMOD.ChannelGroup Handle;
   internal SoundGroup(FMOD.ChannelGroup handle) => Handle = handle;
 
+  /// <summary>
+  /// Silences or resumes every channel in the group at once. On the master group that is the whole
+  /// game, which is what stopping for a locked screen actually needs: FMOD mixes on its own thread,
+  /// so a game that has stopped ticking still plays.
+  /// </summary>
+  public bool Paused
+  {
+    get
+    {
+      if (!Handle.hasHandle()) return false;
+      Check.Ok(Handle.getPaused(out bool paused));
+      return paused;
+    }
+    set
+    {
+      if (!Handle.hasHandle()) return;
+      Check.Ok(Handle.setPaused(value));
+    }
+  }
+
   public float Volume
   {
     get

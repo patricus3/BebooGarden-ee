@@ -180,6 +180,12 @@ public sealed class AndroidGame : IGame
   public void Pause()
   {
     Paused = true;
+
+    // Every channel, not just the ones the map knows about. Pausing the world leaves the music and
+    // anything already playing going, because FMOD mixes on its own thread and does not care that
+    // nothing is ticking - which is why the garden kept playing to a locked screen.
+    SoundSystem.SetAllPaused(true);
+
     if (Map is null) return;
     foreach (Beboo beboo in Map.Beboos) beboo.Pause();
     SoundSystem.DisableAmbiTimer();
@@ -189,6 +195,8 @@ public sealed class AndroidGame : IGame
   public void Unpause()
   {
     Paused = false;
+    SoundSystem.SetAllPaused(false);
+
     if (Map is null) return;
     foreach (Beboo beboo in Map.Beboos) beboo.Unpause();
     SoundSystem.EnableAmbiTimer();

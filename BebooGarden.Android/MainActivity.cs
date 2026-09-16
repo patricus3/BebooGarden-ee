@@ -39,8 +39,21 @@ public sealed class MainActivity : Activity, AudioManager.IOnAudioFocusChangeLis
   /// </summary>
   private const double PhoneIdleRate = 0.1;
 
-  private AndroidGame? _game;
-  private AndroidSpeech? _speech;
+  /// <summary>
+  /// The game outlives the activity on purpose.
+  ///
+  /// Android destroys and recreates an activity whenever it feels like it - after the screen has
+  /// been off a while, on a configuration change it was not told to keep. Building the game in
+  /// OnCreate meant each of those made a second AndroidGame with a second FMOD system inside it,
+  /// while the first carried on playing, because nothing ever released it. That is the music
+  /// playing twice, and then three times.
+  /// </summary>
+  private static AndroidGame? _game;
+  private static AndroidSpeech? _speech;
+
+  /// <summary>Whichever activity is on screen now, for anything that needs to show a dialog.</summary>
+  private static MainActivity? _current;
+
   private BebooNotifier? _notifier;
   private TouchInputFrame? _input;
   private GardenView? _surface;
@@ -51,6 +64,7 @@ public sealed class MainActivity : Activity, AudioManager.IOnAudioFocusChangeLis
   protected override void OnCreate(Bundle? savedInstanceState)
   {
     base.OnCreate(savedInstanceState);
+    _current = this;
 
     // First, before anything at all can throw. A crash that happens on the way up is exactly the
     // one a player most needs to be able to send you, and until this runs the log would be written
@@ -70,8 +84,11 @@ public sealed class MainActivity : Activity, AudioManager.IOnAudioFocusChangeLis
     SetContentView(surface);
     surface.RequestFocus();
 
-    _speech = new AndroidSpeech(this);
-    Voice.Use(_speech);
+    if (_speech is null)
+    {
+      _speech = new AndroidSpeech(ApplicationContext!);
+      Voice.Use(_speech);
+    }
 
     // Android 13+ will not show a notification without this. Asked for here rather than at the
     // moment one is due, because that moment is when the app is being closed and no dialog can
@@ -92,6 +109,16 @@ public sealed class MainActivity : Activity, AudioManager.IOnAudioFocusChangeLis
 
     // Minigames still read an IInputFrame; the garden itself goes through GardenGestures.
     _input = new TouchInputFrame();
+
+    // Already running: this is a recreated activity, so rejoin the game that is already there
+    // rather than starting a second one.
+    if (_game is not null)
+    {
+      RequestAudioFocus();
+      _game.Unpause();
+      StartTicking();
+      return;
+    }
 
     Task.Run(() => Boot(surface));
   }
@@ -114,7 +141,7 @@ public sealed class MainActivity : Activity, AudioManager.IOnAudioFocusChangeLis
       // resolves that to libfmod.so out of the apk's own native library directory.
       FmodJava.Init(this);
 
-      _game = new AndroidGame(new AndroidGameUi(() => this));
+      _game = new AndroidGame(new AndroidGameUi(() => _current));
       GameHost.Use(_game);
       _game.Start();
 
@@ -236,9 +263,21 @@ public sealed class MainActivity : Activity, AudioManager.IOnAudioFocusChangeLis
   protected override void OnDestroy()
   {
     _ticking?.Cancel();
-    _speech?.Shutdown();
-    // Hands back what Init took. Paired with the call in Boot.
-    try { FmodJava.Close(); } catch (Exception error) { Record("fmod shutdown", error); }
+    if (ReferenceEquals(_current, this)) _current = null;
+
+    // Only tear the game down when it is really finishing. A recreated activity gets the same
+    // game back, and releasing FMOD here would take the sound with it.
+    if (IsFinishing)
+    {
+      try { _game?.WriteSave(); } catch (Exception error) { Record("closing down", error); }
+      try { _game?.SoundSystem.Close(); } catch (Exception error) { Record("sound shutdown", error); }
+      _speech?.Shutdown();
+      _speech = null;
+      _game = null;
+      // Hands back what Init took. Paired with the call in Boot.
+      try { FmodJava.Close(); } catch (Exception error) { Record("fmod shutdown", error); }
+    }
+
     base.OnDestroy();
   }
 

@@ -531,7 +531,14 @@ public partial class Beboo
     if (_petCount + GameHost.Current.Random.Next(2) >= PetsBeforeDelight)
     {
       GameHost.Current.SoundSystem.PlayBebooSound(GameHost.Current.SoundSystem.BebooDelightSounds, this);
-      if (Happiness <= 7 && GameHost.Current.Random.Next(2) == 1)
+      // Comforting a crying beboo always works. The coin flip is there to make happiness climb
+      // gently when things are already fine, which is right - but happiness floors at -10 and
+      // crying only stops at CHEEREDUPAT, so a beboo at the bottom needed thirteen successful
+      // pets, at a coin flip each and 800ms between, to be consoled at all. That is over a minute
+      // of stroking a crying animal with no sign it is helping, which is not what the mechanic is
+      // for. Sad beboos are consoled reliably; happy ones still warm up slowly.
+      bool consoling = Happiness < CHEEREDUPAT;
+      if (Happiness <= 7 && (consoling || GameHost.Current.Random.Next(2) == 1))
       {
         Happiness++;
         GameHost.Current.SoundSystem.System.PlaySound(GameHost.Current.SoundSystem.JingleComplete);

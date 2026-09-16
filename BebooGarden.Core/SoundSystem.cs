@@ -643,6 +643,47 @@ public class SoundSystem
   public void DisableAmbiTimer() => _ambiTimer.Stop();
   public void EnableAmbiTimer() => _ambiTimer.Start();
 
+  /// <summary>
+  /// Stops or resumes every sound the game is making, in one go.
+  ///
+  /// Pausing the world is not enough to go quiet. FMOD mixes on a thread of its own, so a channel
+  /// that has already started keeps playing whether or not anything is still calling Update - which
+  /// is why locking the screen left the music going. The master channel group is the one switch
+  /// that covers music, ambience, voices and everything else at once.
+  /// </summary>
+  /// <summary>
+  /// Shuts the sound engine down and hands the audio device back.
+  ///
+  /// Matters on a phone, where the process can outlive the thing that built this: without it a
+  /// recreated activity left the old engine mixing away and the music played twice.
+  /// </summary>
+  public void Close()
+  {
+    try
+    {
+      _ambiTimer?.Stop();
+      SetAllPaused(true);
+      System.Close();
+    }
+    catch (Exception)
+    {
+      // Going away regardless; nothing here is worth a crash on the way out.
+    }
+  }
+
+  public void SetAllPaused(bool paused)
+  {
+    try
+    {
+      SoundGroup? master = System.MasterSoundGroup;
+      if (master is SoundGroup group) group.Paused = paused;
+    }
+    catch (FmodException)
+    {
+      // Nothing worth taking the game down for; the world is paused either way.
+    }
+  }
+
   public void Pause(Map map)
   {
     map.Paused = true;
