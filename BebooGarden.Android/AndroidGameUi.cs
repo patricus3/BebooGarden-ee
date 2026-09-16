@@ -125,20 +125,12 @@ public sealed class AndroidGameUi : IGameUi
     string[] labels = [.. choices.Keys];
     T[] values = [.. choices.Values];
 
-    // Dialogs must be built on the UI thread; the game logic asking for one is on the tick.
-    activity.RunOnUiThread(() =>
-    {
-      var builder = new AlertDialog.Builder(activity);
-      builder.SetTitle(title);
-      builder.SetItems(labels, (_, args) => onChosen(values[args.Which]));
-      if (allowCancel)
-      {
-        builder.SetNegativeButton(Android.Resource.String.Cancel, (_, _) => onChosen(default));
-        builder.SetOnCancelListener(new CancelListener(() => onChosen(default)));
-      }
-      builder.SetCancelable(allowCancel);
-      builder.Show();
-    });
+    AudioMenu.Show(
+        activity,
+        title,
+        labels,
+        i => onChosen(values[i]),
+        allowCancel ? () => onChosen(default) : null);
   }
 
   private sealed class CancelListener(Action onCancel)

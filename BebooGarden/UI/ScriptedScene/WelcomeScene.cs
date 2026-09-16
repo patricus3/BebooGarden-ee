@@ -93,7 +93,8 @@ public class WelcomeScene : IScriptedScene
         Talk(BebooText.ui_allgood, Step.Garden);
         break;
       case Step.Garden:
-        Talk(BebooText.ui_welcome2, Step.Finished);
+        // Wants the player's name; unformatted it reads "{0}" out loud.
+        Talk(String.Format(BebooText.ui_welcome2, _yourName), Step.Finished);
         break;
       case Step.Finished:
         Finish();

@@ -1,4 +1,4 @@
-using Android.App;
+﻿using Android.App;
 using Android.Text;
 using Android.Widget;
 using BebooGarden.Content;
@@ -15,7 +15,9 @@ namespace BebooGarden.Droid;
 ///
 /// Same questions, same order and the same BebooText as the desktop scene, so every translation
 /// carries over and a player who knows one knows the other. What differs is only how they are put:
-/// native dialogs that TalkBack reads, rather than Myra widgets that exist to hold focus.
+/// the game speaks for itself through AudioMenu - flick to move, double tap to take - rather than
+/// drawing Myra widgets that exist only to hold a screen reader's focus. Typing a name still uses
+/// a real input field, because you cannot flick a name into existence.
 ///
 /// The language step is left out. On the desktop the game asks because it has no other way of
 /// knowing; a phone already has a language the player chose for the whole device, and .NET picks
@@ -38,17 +40,8 @@ internal sealed class AndroidWelcome
     Say(BebooText.ui_welcome, () => AskName());
   }
 
-  /// <summary>Speaks a line, then moves on. Nothing to click: the line is the screen.</summary>
-  private void Say(string line, Action next)
-  {
-    Voice.Current.Say(line, interrupt: true);
-    _activity.RunOnUiThread(() =>
-        new AlertDialog.Builder(_activity)
-            .SetMessage(line)!
-            .SetPositiveButton(Android.Resource.String.Ok, (_, _) => next())!
-            .SetCancelable(false)!
-            .Show());
-  }
+  /// <summary>Speaks a line and waits for a double tap. Nothing to look at: the line is the screen.</summary>
+  private void Say(string line, Action next) => AudioMenu.Say(_activity, line, next);
 
   private void AskName()
       => AskText(BebooText.ui_yourname, 12, name =>
@@ -83,7 +76,10 @@ internal sealed class AndroidWelcome
       => AskChoice(BebooText.ui_dessert, Desserts(), dessert =>
       {
         _answers.Dessert = dessert;
-        Say(BebooText.ui_allgood, () => Say(BebooText.ui_welcome2, Finish));
+        // ui.welcome2 is "Right, {0}, here is your garden..." - it wants the player's name, and
+        // without the format it reads the placeholder out loud.
+        Say(BebooText.ui_allgood,
+            () => Say(string.Format(BebooText.ui_welcome2, _answers.PlayerName), Finish));
       });
 
   private static Dictionary<string, string> Desserts() => new()
@@ -117,15 +113,8 @@ internal sealed class AndroidWelcome
 
   private void AskChoice(string question, Dictionary<string, string> options, Action<string> onAnswered)
   {
-    Voice.Current.Say(question, interrupt: true);
     string[] labels = [.. options.Keys];
     string[] values = [.. options.Values];
-
-    _activity.RunOnUiThread(() =>
-        new AlertDialog.Builder(_activity)
-            .SetTitle(question)!
-            .SetItems(labels, (_, args) => onAnswered(values[args.Which]))!
-            .SetCancelable(false)!
-            .Show());
+    AudioMenu.Show(_activity, question, labels, i => onAnswered(values[i]));
   }
 }

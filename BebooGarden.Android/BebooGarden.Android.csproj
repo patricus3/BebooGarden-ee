@@ -28,6 +28,18 @@
 		     that would be worth losing mods over. -->
 		<RunAOTCompilation>false</RunAOTCompilation>
 		<PublishTrimmed>false</PublishTrimmed>
+		<!--
+		  Marshal methods generate the JNI registrations ahead of time, and twice now they have
+		  silently failed to cover a type: once when fmod.jar was added as a bound library, and
+		  again on adding a second View subclass. Both times every launch died with
+
+		    UnsatisfiedLinkError: No implementation found for MainActivity.n_onCreate
+
+		  before a line of managed code ran - so no crash log, no speech, nothing to go on but a
+		  splash screen and a dead process. The classic reflection-based registration is slightly
+		  slower to start and has not once been wrong. A game that draws nothing can afford that.
+		-->
+		<AndroidEnableMarshalMethods>false</AndroidEnableMarshalMethods>
 	</PropertyGroup>
 
 
