@@ -1,4 +1,4 @@
-<#
+﻿<#
 Puts FMOD's Android native libraries where the build expects them.
 
 FMOD is not redistributable, so the archive itself cannot live in this repository and cannot be
@@ -31,6 +31,11 @@ function Write-Step($text) { if (-not $Quiet) { Write-Host $text } }
 
 # --- Already done? -----------------------------------------------------------
 $present = $abis | Where-Object { Test-Path (Join-Path $libRoot "$_\libfmod.so") }
+if ($present.Count -gt 0 -and -not (Test-Path (Join-Path $libRoot 'fmod.jar'))) {
+    Write-Host "  libfmod.so is here but fmod.jar is not; FMOD would fail with ERR_INTERNAL."
+    Write-Host "  Re-unpacking to pick it up."
+    $present = @()
+}
 if ($present.Count -gt 0) {
     Write-Step "  FMOD already in place for: $($present -join ', ')"
     exit 0
@@ -170,6 +175,20 @@ try {
     if ($copied -eq 0) {
         Write-Host "  Found libfmod.so but not for any ABI this build uses ($($abis -join ', '))."
         exit 3
+    }
+
+    # FMOD on Android is half native and half Java. org.fmod.FMOD has to be handed the Context
+    # before a system can be created - without it System_Create returns ERR_INTERNAL and says
+    # nothing more useful than that - so the jar is every bit as required as the .so.
+    $jar = Get-ChildItem $staging -Recurse -File -Filter 'fmod.jar' -ErrorAction SilentlyContinue |
+        Select-Object -First 1
+    if ($jar) {
+        Copy-Item $jar.FullName (Join-Path $libRoot 'fmod.jar') -Force
+        Write-Step ("  {0,-14} {1:N1} KB" -f 'fmod.jar', ($jar.Length / 1KB))
+    }
+    else {
+        Write-Host "  WARNING: no fmod.jar in that archive. Android needs it as well as the .so;"
+        Write-Host "           without it FMOD fails to start with ERR_INTERNAL."
     }
 
     Write-Step "  FMOD ready for $copied ABI(s)."

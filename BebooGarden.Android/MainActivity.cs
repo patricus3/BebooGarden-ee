@@ -93,9 +93,12 @@ public sealed class MainActivity : Activity, AudioManager.IOnAudioFocusChangeLis
       Voice.Current.Say("Setting up your garden. This happens once.");
       AndroidStorage.Prepare(this);
 
-      // Nothing to point at a library here: FMOD's own bindings P/Invoke against "fmod", and
-      // Android resolves that to libfmod.so out of the apk's native library directory, which is
-      // already the one holding the right ABI for this device.
+      // FMOD's Android build is half native and half Java, and the Java half has to be given the
+      // Context before any system can be created - that is how it reaches the audio device and the
+      // asset manager. Without this, System_Create returns ERR_INTERNAL and says nothing else.
+      // The native side needs no configuring: the bindings P/Invoke against "fmod" and Android
+      // resolves that to libfmod.so out of the apk's own native library directory.
+      Org.Fmod.FMOD.Init(this);
 
       _game = new AndroidGame(new AndroidGameUi(() => this));
       GameHost.Use(_game);
@@ -197,6 +200,8 @@ public sealed class MainActivity : Activity, AudioManager.IOnAudioFocusChangeLis
   {
     _ticking?.Cancel();
     _speech?.Shutdown();
+    // Hands back what Init took. Paired with the call in Boot.
+    try { Org.Fmod.FMOD.Close(); } catch (Exception error) { Record("fmod shutdown", error); }
     base.OnDestroy();
   }
 

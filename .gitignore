@@ -377,3 +377,4 @@ BebooGarden.Android/lib/android/**/*.so
 
 # Android SDK / JDK installed by build_all.bat, if anyone points them inside the repo.
 .android/
+BebooGarden.Android/lib/android/fmod.jar

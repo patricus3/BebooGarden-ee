@@ -37,20 +37,26 @@
 	</ItemGroup>
 
 	<!--
-	  FMOD's Android native libraries. Drop them in and the game has sound; without them it starts,
-	  speaks and unpacks its content but dies the moment it tries to create the FMOD system.
+	  FMOD's Android side, fetched by download_deps.bat rather than committed - the licence does
+	  not allow redistributing it. It comes in two halves, and it took a crash on a real phone to
+	  find that out:
 
-	  They are not in this repository because FMOD's licence does not let them be redistributed -
-	  you download them yourself from fmod.com. Take "FMOD Engine" for Android and copy the .so out
-	  of api/core/lib/<abi>/ into lib/android/<abi>/ here. The ABI folder name is what the build
-	  reads to decide which slice of the apk each one belongs in, so keep those names exactly.
+	    lib/<abi>/libfmod.so   the engine. Needs no item group: the Android SDK already globs
+	                          lib/<abi>/*.so into AndroidNativeLibrary, and listing them again
+	                          only earns XA4301 for every file.
 
-	  The glob means adding an ABI needs no edit here. If the folder is empty the build still
-	  succeeds, which is deliberate: everything except the audio can be worked on without it.
+	    lib/android/fmod.jar  org.fmod.FMOD, which must be handed the Context before any system
+	                          can be created - that is how FMOD reaches the audio device and the
+	                          asset manager. Without it System_Create returns ERR_INTERNAL and
+	                          says nothing else. Bind=true generates the C# so MainActivity can
+	                          call Org.Fmod.FMOD.Init.
+
+	  Conditioned so the project still builds with neither present: everything except the audio
+	  can be worked on without them.
 	-->
-	<!-- No item group for these: the Android SDK already globs lib\<abi>\*.so into
-	     AndroidNativeLibrary by itself, and adding them again only earns XA4301
-	     "APK already contains the item" for every one of them. -->
+	<ItemGroup Condition="Exists('lib\android\fmod.jar')">
+		<AndroidLibrary Include="lib\android\fmod.jar" Bind="true" />
+	</ItemGroup>
 
 	<!--
 	  The sounds ship as ONE zip asset, unpacked on first run - see AndroidStorage.
