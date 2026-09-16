@@ -19,7 +19,7 @@ namespace BebooGarden;
 public partial class Game1
 {
   public Map? Map { get; private set; }
-  public System.Numerics.Vector3 PlayerPosition { get; private set; }
+  public System.Numerics.Vector3 PlayerPosition { get; set; }
   public DateTime LastPressedKeyTime { get; private set; }
 
   protected override void Initialize()

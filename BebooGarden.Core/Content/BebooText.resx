@@ -659,4 +659,17 @@ A soft little place called the fluff has opened up, at the top right of the gard
 	<data name="ui.hatchcolor" xml:space="preserve">
 		<value>Your beboo is {0}!</value>
 	</data>
+  <data name="ui.welcome2.touch" xml:space="preserve">
+    <value>Right, {0}, here is your garden. It's yours now, from all of us here at the centre.
+It's a wide square of greenery, with a small lagoon over to the left and tall fruit trees to the right. I'd put headphones on, if you have them: you'll find your way around this place by ear.
+There's an egg waiting on your right, about to hatch. Once I stop talking, flick left, right, up or down to walk - hold at the end of a flick to keep going - and when you hear it right in front of you, tap to help your beboo out of its shell.</value>
+  </data>
+  <data name="ui.quicktips.touch" xml:space="preserve">
+    <value>There we are. Before I leave you to it, the things that matter.
+Food: tap the trees on your right to shake them. Then stand next to {0} and tap to offer a fruit, the same way you helped with the egg.
+Press and hold at any time and I'll tell you how {0} is doing: how happy, how tired.
+Two finger tap picks {0} up, and puts it down again.
+This garden isn't the only place. As you go on, paths open to other places, and you cross by double tapping where you hear one. Your beboo won't follow you on its own, so whistle with a three finger tap before you go, and it will come along with you. It's worth taking it places. A beboo that only ever sees one field gets bored.
+Two finger press and hold tells you your tickets and fruit. That's everything. Enjoy each other.</value>
+  </data>
 </root>

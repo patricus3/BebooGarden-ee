@@ -20,39 +20,11 @@ public partial class Game1
   private Beboo? _contester;
 
   /// <summary>The beboo currently carried by the player, if any.</summary>
-  public Beboo? BebooInArms { get; private set; }
+  public Beboo? BebooInArms { get; set; }
 
-  private void TakeOrPutDownBeboo()
-  {
-    if (BebooInArms != null)
-    {
-      BebooInArms.PutDown();
-      BebooInArms = null;
-      _lastSwayWasLeft = false;
-      SoundSystem.System.PlaySound(SoundSystem.ItemPutSound);
-      return;
-    }
-    if (ItemInHand != null)
-    {
-      SoundSystem.System.PlaySound(SoundSystem.WarningSound);
-      CrossSpeakManager.Instance.Output(BebooText.beboo_handsfull);
-      return;
-    }
-    Beboo? bebooUnderCursor = BebooUnderCursor();
-    if (bebooUnderCursor == null)
-    {
-      SoundSystem.System.PlaySound(SoundSystem.WarningSound);
-      return;
-    }
-    bebooUnderCursor.PickUp();
-    BebooInArms = bebooUnderCursor;
-    _lastSwayWasLeft = false;
-  }
+  private void TakeOrPutDownBeboo() => GameCore.PlayerActions.TakeOrPutDownBeboo(this);
 
-  private void SwayBebooInArms(bool toLeft)
-  {
-    BebooInArms?.Sway(toLeft);
-  }
+  private void SwayBebooInArms(bool toLeft) => GameCore.PlayerActions.SwayBebooInArms(this, toLeft);
 
   /// <summary>Lets go of the carried beboo when something else took it away, a race for instance.</summary>
   private void ReleaseBebooInArmsIfGone()
@@ -63,41 +35,8 @@ public partial class Game1
     BebooInArms = null;
   }
 
-  private void SayBebooState()
-  {
-    if (Map?.Beboos.Count == 0)
-    {
-      CrossSpeakManager.Instance.Output(BebooText.nobeboo);
-    }
-    if (Map is null) return;
-    string allSentences = "";
-    foreach (var beboo in Map.Beboos)
-    {
-      string sentence;
-      string name = beboo.Name;
-      if (beboo.Sleeping)
-      {
-        sentence = BebooText.beboo_sleep;
-      }
-      else
-      {
-        if (beboo.Happiness < 0) sentence = BebooText.beboo_verysad;
-        // Read the same flag the music follows, so the two can never disagree.
-        else if (!beboo.Happy) sentence = BebooText.beboo_littlesad;
-        else sentence = beboo.EnergyLevel switch
-        {
-          EnergyStage.Exhausted => BebooText.beboo_exhausted,
-          EnergyStage.Tired => BebooText.beboo_tired,
-          EnergyStage.LittleTired => BebooText.beboo_littletired,
-          EnergyStage.Ok => BebooText.beboo_okenergy,
-          _ => BebooText.beboo_energetic,
-        };
-      }
-      allSentences += String.Format(sentence, name);
-      allSentences += "\n";
-    }
-    CrossSpeakManager.Instance.Output(allSentences);
-  }
+  private void SayBebooState() => GameCore.PlayerActions.SayBebooState(this);
+
   private void FeedBeboo()
   {
     Beboo? bebooUnderCursor = BebooUnderCursor();

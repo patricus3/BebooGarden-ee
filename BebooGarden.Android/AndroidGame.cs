@@ -31,7 +31,13 @@ public sealed class AndroidGame : IGame
   public Map? Map { get; private set; }
   public Random Random { get; } = new();
   public SaveParameters Save { get; private set; } = null!;
-  public Vector3 PlayerPosition { get; private set; }
+  public Vector3 PlayerPosition { get; set; }
+
+  /// <summary>The beboo being carried, if any.</summary>
+  public Beboo? BebooInArms { get; set; }
+
+  /// <summary>The item taken out of the bag and not yet put down, if any.</summary>
+  public Item? ItemInHand { get; set; }
   public IMiniGame? CurrentPlayingMiniGame { get; set; }
   public List<Item> Inventory { get; set; } = [];
   public IGameUi Ui { get; }

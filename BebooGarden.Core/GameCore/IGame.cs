@@ -1,4 +1,4 @@
-using BebooGarden.GameCore.Item;
+﻿using BebooGarden.GameCore.Item;
 using BebooGarden.GameCore.World;
 using BebooGarden.MiniGames;
 using BebooGarden.Save;
@@ -26,7 +26,14 @@ public interface IGame
   Map? Map { get; }
   Random Random { get; }
   SaveParameters Save { get; }
-  Vector3 PlayerPosition { get; }
+  /// <summary>Where the player stands. Settable because walking is shared code now.</summary>
+  Vector3 PlayerPosition { get; set; }
+
+  /// <summary>The beboo currently being carried, if any.</summary>
+  Pet.Beboo? BebooInArms { get; set; }
+
+  /// <summary>The item taken out of the bag and not yet put down, if any.</summary>
+  Item.Item? ItemInHand { get; set; }
   IMiniGame? CurrentPlayingMiniGame { get; set; }
   List<Item.Item> Inventory { get; set; }
 

@@ -94,7 +94,7 @@ public class WelcomeScene : IScriptedScene
         break;
       case Step.Garden:
         // Wants the player's name; unformatted it reads "{0}" out loud.
-        Talk(String.Format(BebooText.ui_welcome2, _yourName), Step.Finished);
+        Talk(String.Format(GameCore.Controls.Welcome2, _yourName), Step.Finished);
         break;
       case Step.Finished:
         Finish();

@@ -1689,5 +1689,23 @@ namespace BebooGarden.Content {
             }
         }
 
-    }
+            /// <summary>
+        ///   Touch-worded version of ui.welcome2, for platforms with no keyboard.
+        /// </summary>
+        public static string ui_welcome2_touch {
+            get {
+                return ResourceManager.GetString("ui.welcome2.touch", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Touch-worded version of ui.quicktips, for platforms with no keyboard.
+        /// </summary>
+        public static string ui_quicktips_touch {
+            get {
+                return ResourceManager.GetString("ui.quicktips.touch", resourceCulture);
+            }
+        }
+        
+}
 }

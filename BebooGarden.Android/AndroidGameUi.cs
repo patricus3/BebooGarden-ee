@@ -77,7 +77,7 @@ public sealed class AndroidGameUi : IGameUi
             beboo.Name = name;
             if (GameHost.Current.Save.Flags.NewGame)
             {
-              Voice.Current.Say(string.Format(BebooText.ui_quicktips, name));
+              Voice.Current.Say(string.Format(Controls.QuickTips, name));
               GameHost.Current.Save.Flags.NewGame = false;
             }
           })!

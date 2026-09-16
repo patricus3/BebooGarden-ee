@@ -79,7 +79,7 @@ internal sealed class AndroidWelcome
         // ui.welcome2 is "Right, {0}, here is your garden..." - it wants the player's name, and
         // without the format it reads the placeholder out loud.
         Say(BebooText.ui_allgood,
-            () => Say(string.Format(BebooText.ui_welcome2, _answers.PlayerName), Finish));
+            () => Say(string.Format(Controls.Welcome2, _answers.PlayerName), Finish));
       });
 
   private static Dictionary<string, string> Desserts() => new()

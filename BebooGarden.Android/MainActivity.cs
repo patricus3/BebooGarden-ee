@@ -43,6 +43,8 @@ public sealed class MainActivity : Activity, AudioManager.IOnAudioFocusChangeLis
   private AndroidSpeech? _speech;
   private BebooNotifier? _notifier;
   private TouchInputFrame? _input;
+  private GardenView? _surface;
+  private DateTime _lastStepAt = DateTime.MinValue;
   private CancellationTokenSource? _ticking;
   private AudioFocusRequestClass? _focusRequest;
 
@@ -64,6 +66,7 @@ public sealed class MainActivity : Activity, AudioManager.IOnAudioFocusChangeLis
     // Nothing is drawn, but a view is still needed to receive touches and to be what TalkBack
     // focuses when it is running.
     var surface = new GardenView(this);
+    _surface = surface;
     SetContentView(surface);
     surface.RequestFocus();
 
@@ -84,9 +87,11 @@ public sealed class MainActivity : Activity, AudioManager.IOnAudioFocusChangeLis
     _notifier.CancelPending();
 
     OfflineProgress.IdleRate = PhoneIdleRate;
+    // So the game explains itself in flicks and taps rather than arrow keys and the space bar.
+    Controls.IsTouch = true;
 
+    // Minigames still read an IInputFrame; the garden itself goes through GardenGestures.
     _input = new TouchInputFrame();
-    surface.Actions = _input;
 
     Task.Run(() => Boot(surface));
   }
@@ -163,6 +168,7 @@ public sealed class MainActivity : Activity, AudioManager.IOnAudioFocusChangeLis
         try
         {
           _input?.BeginTick();
+          WalkIfHeld();
           _game?.Update();
           _game?.CurrentPlayingMiniGame?.Update(_input!);
         }
@@ -173,6 +179,20 @@ public sealed class MainActivity : Activity, AudioManager.IOnAudioFocusChangeLis
         await Task.Delay(TickInterval, token).ConfigureAwait(false);
       }
     }, token);
+  }
+
+  /// <summary>
+  /// Keeps walking while a flick is being held, at the same rate a held arrow key moves on the
+  /// desktop. Crossing a sixty-square garden is then a flick and a wait, not sixty flicks.
+  /// </summary>
+  private void WalkIfHeld()
+  {
+    if (_game is null || _game.Paused) return;
+    if (_surface?.HeldDirection is not System.Numerics.Vector3 direction) return;
+    if (DateTime.Now - _lastStepAt < PlayerActions.StepInterval) return;
+
+    _lastStepAt = DateTime.Now;
+    PlayerActions.MoveOf(_game, direction);
   }
 
   // --- Lifecycle -----------------------------------------------------------
@@ -284,67 +304,5 @@ public sealed class MainActivity : Activity, AudioManager.IOnAudioFocusChangeLis
         _game.Unpause();
         break;
     }
-  }
-}
-
-/// <summary>
-/// The gesture surface. Draws nothing - it exists to catch touches and to be something TalkBack can
-/// focus.
-///
-/// Walking uses a relative anchor rather than an on-screen d-pad: wherever the first finger lands
-/// becomes the origin, and dragging from it is a direction. A blind player has nothing to aim at,
-/// so a fixed control in a fixed corner is the one thing that cannot work.
-/// </summary>
-public sealed class GardenView : View
-{
-  private const float DeadZonePx = 48f;
-
-  private float _anchorX, _anchorY;
-  private bool _anchored;
-
-  public TouchInputFrame? Actions { get; set; }
-
-  public GardenView(Context context) : base(context)
-  {
-    Focusable = true;
-    FocusableInTouchMode = true;
-    ContentDescription =
-        "Beboo Garden. Drag to walk, tap with two fingers to interact. " +
-        "Pause TalkBack by holding both volume keys for three seconds to play with gestures.";
-  }
-
-  public override bool OnTouchEvent(MotionEvent? e)
-  {
-    if (e is null || Actions is null) return false;
-
-    switch (e.ActionMasked)
-    {
-      case MotionEventActions.Down:
-        _anchorX = e.GetX();
-        _anchorY = e.GetY();
-        _anchored = true;
-        return true;
-
-      case MotionEventActions.Move when _anchored:
-        float dx = e.GetX() - _anchorX;
-        float dy = e.GetY() - _anchorY;
-        if (dx * dx + dy * dy < DeadZonePx * DeadZonePx) return true;
-        // Whichever axis dominates wins, so a rough drag still goes where it was meant to.
-        Actions.Raise(Math.Abs(dx) > Math.Abs(dy)
-            ? (dx > 0 ? GameAction.Slot2 : GameAction.Slot1)
-            : (dy > 0 ? GameAction.Slot4 : GameAction.Slot3));
-        return true;
-
-      case MotionEventActions.PointerDown when e.PointerCount >= 2:
-        Actions.Raise(GameAction.Back);
-        return true;
-
-      case MotionEventActions.Up:
-      case MotionEventActions.Cancel:
-        _anchored = false;
-        return true;
-    }
-
-    return base.OnTouchEvent(e);
   }
 }

@@ -96,7 +96,7 @@ public class NewBebooScene : IScriptedScene
     }
     else if (_bebooName!=String.Empty && Game1.Instance.Save.Flags.NewGame)
     {
-      _quickTipsDialog = new TalkDialog(String.Format(BebooText.ui_quicktips, _bebooName), GameScreen.ScriptedScene);
+      _quickTipsDialog = new TalkDialog(String.Format(GameCore.Controls.QuickTips, _bebooName), GameScreen.ScriptedScene);
       _quickTipsDialog.Show();
       _tipsDialogShowed = true;
       Game1.Instance.Save.Flags.NewGame = false;

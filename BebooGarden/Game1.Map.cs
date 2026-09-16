@@ -12,23 +12,20 @@ namespace BebooGarden;
 public partial class Game1
 {
   private Map? _backedMap;
+  /// <summary>
+  /// Goes through the gate between two maps. The moving is shared with the Android head; see
+  /// GameCore.PlayerActions.TravelThrough.
+  /// </summary>
   private void TravelBetwieen(MapPreset a, MapPreset b)
   {
-    Map richedMap = Map;
-    if (Map.Preset == a) richedMap = Map.Maps[b];
-    else if (Map.Preset == b) richedMap = Map.Maps[a];
-    List<Beboo> beboosHere = BeboosUnderCursor(2);
-    foreach (Beboo transferedBeboo in beboosHere)
-    {
-      Map?.Beboos.Remove(transferedBeboo);
-      transferedBeboo.Position = new(0, 0, 0);
-      richedMap.Beboos.Add(transferedBeboo);
-      GameCore.Item.FluffBall.FollowFriend(transferedBeboo, Map, richedMap);
-    }
-    ChangeMap(richedMap);
-    ChangeMapMusic();
-    PlayerPosition = new(0, 0, 0);
+    if (Map is null) return;
+    MapPreset target = Map.Preset == a ? b : Map.Preset == b ? a : Map.Preset;
+    if (target == Map.Preset) return;
+    MapConnexion? connexion = Map.GetConnexionArroundPosition(PlayerPosition);
+    GameCore.PlayerActions.TravelThrough(this,
+        connexion ?? new MapConnexion(PlayerPosition, target, () => string.Empty));
   }
+
   public void ChangeMapMusic()
   {
     if (Map != null) SoundSystem.PlayMapMusic(Map);
