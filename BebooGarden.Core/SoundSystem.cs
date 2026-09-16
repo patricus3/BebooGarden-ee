@@ -112,8 +112,12 @@ public class SoundSystem
 
 
   /// <summary>
-  /// The base voice's crying, borrowed by every beboo for the moments that used to fire the one
-  /// harsh shared scream: panicking in water, being startled, being shaken too hard.
+  /// The base voice's crying, and nothing else's.
+  ///
+  /// Kept because mods may use it, but the game does not any more. Passing it to PlayBebooSound
+  /// hands over a plain list, which skips the per-voice lookup entirely - so every creature wailed
+  /// in the base voice even when it had crying of its own. Pass BebooCrySounds instead: that falls
+  /// back to base for anything without its own, which is all this was ever wanted for.
   /// </summary>
   public List<Sound> BebooWailSounds => BebooCrySounds[BebooType.Base.ToString()];
   public Sound ItemPutSound { get; private set; }

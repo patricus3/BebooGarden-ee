@@ -155,7 +155,11 @@ public partial class Beboo
     WakeUp(true);
     Happiness -= 3;
     Energy--;
-    GameHost.Current.SoundSystem.PlayBebooSound(GameHost.Current.SoundSystem.BebooWailSounds, this);
+    // The creature's own crying. This used to be BebooWailSounds, which is the base voice and only
+    // the base voice, so a beboo with a voice of its own - or a modded creature with nothing
+    // remotely beboo-shaped about it - wailed in somebody else's. GetBebooSounds already falls back
+    // to base for anything that has no crying of its own, which is all that property was for.
+    GameHost.Current.SoundSystem.PlayBebooSound(GameHost.Current.SoundSystem.BebooCrySounds, this);
     BurstInTearrs();
     Voice.Current.Say(String.Format(BebooText.beboo_swaytoohard, Name));
     Later(800, () =>

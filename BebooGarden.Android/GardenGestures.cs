@@ -65,6 +65,9 @@ internal sealed class GardenGestures
   private long _lastTapAt;
   private long _lastTwoFingerTapAt;
 
+  /// <summary>Which way the last rock went, so the next one only counts if it goes the other way.</summary>
+  private bool? _lastRockWasLeft;
+
   private float _downX, _downY;
   private long _downAt;
   private int _maxFingers;
@@ -91,6 +94,7 @@ internal sealed class GardenGestures
         _maxFingers = 1;
         _flicked = false;
         _longPressSent = false;
+        _lastRockWasLeft = null;
         Held = null;
         return true;
 
@@ -116,17 +120,35 @@ internal sealed class GardenGestures
           if (Math.Abs(dx) <= FlickThreshold && Math.Abs(dy) <= FlickThreshold) return true;
 
           bool sideways = Math.Abs(dx) > Math.Abs(dy);
-          GardenGesture stroke = _maxFingers >= 3
-              ? GardenGesture.WhereAmI
-              : sideways
-                  ? (dx > 0 ? GardenGesture.RockRight : GardenGesture.RockLeft)
-                  : GardenGesture.Pet;
-
           _flicked = true;
           CancelPendingTap();
-          _on(stroke);
 
-          // Re-anchor, so stroking back and forth keeps petting rather than firing once.
+          if (_maxFingers >= 3)
+          {
+            _on(GardenGesture.WhereAmI);
+          }
+          else if (sideways)
+          {
+            // Rocking is gated on the direction changing, exactly as the desktop gates it on the
+            // arrow key alternating. One sway is half a rock, and what tells a lullaby from a
+            // shaking is the gap between them: under 450ms counts as a jolt, and four jolts make
+            // the beboo cry. Firing once per re-anchored 55px of one gentle stroke sent several
+            // sways milliseconds apart, so stroking softly shook the poor thing.
+            bool toLeft = dx < 0;
+            if (_lastRockWasLeft != toLeft)
+            {
+              _lastRockWasLeft = toLeft;
+              _on(toLeft ? GardenGesture.RockLeft : GardenGesture.RockRight);
+            }
+          }
+          else
+          {
+            // Petting has no such gate: Beboo.GetPetted already refuses to be petted more than
+            // once every 800ms, so a continuous stroke settles into its own rhythm.
+            _on(GardenGesture.Pet);
+          }
+
+          // Re-anchor, so a reversal is measured from here and a long stroke keeps working.
           _downX = e.GetX();
           _downY = e.GetY();
           return true;
