@@ -44,23 +44,12 @@ public partial class Game1
     MusicBox.AvailableRolls = Save.UnlockedRolls ?? [];
     SoundSystem.Volume = Save.Volume;
     SoundSystem.LoadMainScreen();
-    if (!Save.Flags.NewGame)
-    {
-    }
-    else
-    {
-      PlayerPosition = new Vector3(-2, 0, 0);
-      Map.AddItem(new Egg(Save.FavoredColor), new(2, 0, 0));
-    }
-    SoundSystem.MusicVolume = Save.MusicLevel ?? 1f;
-    SoundSystem.MusicMuted = Save.MusicMuted;
+    // No starting egg here. MonoGame runs LoadContent from inside base.Initialize, so this happens
+    // before the rest of Game1.Initialize - which loads the save again and calls SaveRestore, which
+    // puts the egg down itself. Both did it, so a new game got two, and only the welcome sequence
+    // sweeping every egg off the map at the end hid it.
     LastPressedKeyTime = DateTime.Now;
-    if (Save.FruitsBasket == null || Save.FruitsBasket.Count == 0)
-    {
-      Save.FruitsBasket = [];
-      foreach (FruitSpecies fruitSpecies in Enum.GetValues(typeof(FruitSpecies))) Save.FruitsBasket[fruitSpecies] = 0;
-    }
-    Inventory = Save.Inventory;
+    // The bag and the basket are restored with the rest of the save; see Save.SaveRestore.
     MediaPlayer.Volume = 0.3f;
     SoundEffect.MasterVolume = 1f;
     MyraEnvironment.Game = this;

@@ -59,6 +59,7 @@ internal sealed class GardenView : View
       Keycode.T or Keycode.G => GardenGesture.Inventory,
       Keycode.C => GardenGesture.CallByName,
       Keycode.E => GardenGesture.Feed,
+      Keycode.B => GardenGesture.Bag,
       _ => null,
     };
 
@@ -80,6 +81,7 @@ internal sealed class GardenView : View
       "Stroke left and right with two fingers to rock the beboo you are carrying. " +
       "Two finger tap picks a beboo up, and puts it down. " +
       "Two finger double tap offers it a fruit. " +
+      "Three finger double tap opens your bag; tap to put down what you take out. " +
       "Three finger tap whistles and calls your beboos. " +
       "Stroke with three fingers to hear again where you are. " +
       "Press and hold to hear how your beboos are. " +
@@ -121,6 +123,7 @@ internal sealed class GardenView : View
 
       case GardenGesture.Pet: PlayerActions.ShakeOrPetAtPlayerPosition(game); break;
       case GardenGesture.Feed: PlayerActions.FeedBeboo(game); break;
+      case GardenGesture.Bag: PlayerActions.OpenBag(game); break;
       case GardenGesture.RockLeft: PlayerActions.SwayBebooInArms(game, true); break;
       case GardenGesture.RockRight: PlayerActions.SwayBebooInArms(game, false); break;
 

@@ -1,4 +1,4 @@
-using BebooGarden.GameCore;
+﻿using BebooGarden.GameCore;
 using BebooGarden.GameCore.Item;
 using BebooGarden.GameCore.Pet;
 using BebooGarden.GameCore.World;
@@ -33,6 +33,20 @@ public static class SaveRestore
   public static void Apply(IGame game)
   {
     if (game.Map is null) return;
+
+    // The bag. Windows restored this in its own content loading and Android never did, so anything
+    // picked up on a phone went into a bag that was thrown away at the next launch - it looked for
+    // all the world like the item had simply vanished.
+    game.Inventory = game.Save.Inventory ?? [];
+
+    // A basket with no entries at all is not the same as an empty one: the feeding menu reads every
+    // species out of it, so it has to exist before anybody picks fruit.
+    if (game.Save.FruitsBasket is null || game.Save.FruitsBasket.Count == 0)
+    {
+      game.Save.FruitsBasket = [];
+      foreach (FruitSpecies species in Enum.GetValues<FruitSpecies>())
+        game.Save.FruitsBasket[species] = 0;
+    }
 
     if (game.Save.Flags.NewGame) StartFreshGarden(game);
     else RestoreGarden(game);

@@ -39,6 +39,8 @@ public enum GardenGesture
   Menu,
   /// <summary>Two-finger double tap: offer the beboo here a fruit.</summary>
   Feed,
+  /// <summary>Three-finger double tap: open the bag and take something out.</summary>
+  Bag,
 }
 
 /// <summary>
@@ -64,6 +66,7 @@ internal sealed class GardenGestures
   private Action? _pendingTap;
   private long _lastTapAt;
   private long _lastTwoFingerTapAt;
+  private long _lastThreeFingerTapAt;
 
   /// <summary>Which way the last rock went, so the next one only counts if it goes the other way.</summary>
   private bool? _lastRockWasLeft;
@@ -216,8 +219,25 @@ internal sealed class GardenGestures
 
         if (_maxFingers >= 3)
         {
-          // Three fingers is unambiguous, so it fires at once.
-          _on(GardenGesture.Whistle);
+          // Three fingers carries two meanings now, so it waits the double-tap window out like the
+          // others: once whistles, twice opens the bag.
+          if (now - _lastThreeFingerTapAt <= ViewConfiguration.DoubleTapTimeout)
+          {
+            CancelPendingTap();
+            _lastThreeFingerTapAt = 0;
+            _on(GardenGesture.Bag);
+            return true;
+          }
+
+          _lastThreeFingerTapAt = now;
+          _pendingTap = () => _on(GardenGesture.Whistle);
+          Action whistle = _pendingTap;
+          _handler.PostDelayed(() =>
+          {
+              if (!ReferenceEquals(_pendingTap, whistle)) return;
+              _pendingTap = null;
+              whistle();
+          }, ViewConfiguration.DoubleTapTimeout);
           return true;
         }
 

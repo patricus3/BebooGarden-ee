@@ -259,6 +259,42 @@ public static class PlayerActions
     game.Save.FruitsBasket[fruit] = held - 1;
   }
 
+  /// <summary>
+  /// Opens the bag and takes something out of it, ready to be put down.
+  ///
+  /// Picking an item up puts it in the bag, and only taking it back out sets ItemInHand - which is
+  /// what putting it down needs. On Windows that happened in the inventory menu; the phone had no
+  /// such menu, so anything picked up there went into a bag with no way into it and looked to have
+  /// vanished. Identical items are counted rather than listed one by one: three fruits in a row all
+  /// reading "apple" tells you nothing about which to choose.
+  /// </summary>
+  public static void OpenBag(IGame game)
+  {
+    if (game.Inventory.Count == 0)
+    {
+      game.SoundSystem.System.PlaySound(game.SoundSystem.WarningSound);
+      Voice.Current.Say(BebooText.ui_emptyinventory);
+      return;
+    }
+
+    Dictionary<string, Item.Item> options = [];
+    foreach (Item.Item item in game.Inventory)
+    {
+      int count = game.Inventory.Count(other => other.Name == item.Name);
+      string label = count > 1 ? $"{item.Name} {count}" : item.Name;
+      // First of each name wins; they are interchangeable.
+      options.TryAdd(label, item);
+    }
+
+    game.Ui.Choose<Item.Item>(BebooText.ui_chooseitem, options, chosen =>
+    {
+      if (chosen is null) return;
+      game.ItemInHand = chosen;
+      game.SoundSystem.System.PlaySound(game.SoundSystem.MenuOkSound);
+      Voice.Current.Say(chosen.Name);
+    });
+  }
+
   // --- Calling -------------------------------------------------------------
 
   /// <summary>Whistles. Some of the beboos wake and start heading for where the player stands.</summary>
