@@ -563,8 +563,12 @@ public class SoundSystem
   public void PlayBebooSound(Dictionary<string, List<Sound>> sounds, Beboo beboo, bool stopOthers = true, float volume = -1)
   {
     if (beboo.Paused) return;
-    List<Sound> soundsList = new();
-    soundsList = GetBebooSounds(sounds, beboo);
+    List<Sound> soundsList = GetBebooSounds(sounds, beboo);
+    // Silence rather than a crash when a voice has nothing in this category. Random.Next(0) is 0,
+    // so an empty list went straight to list[0] and threw - which is what happened every time a
+    // beboo tried to chirp while its voice folder had not been found. A missing voice is tolerated
+    // on purpose, for mods; it should stay tolerated when the fallback is missing too.
+    if (soundsList.Count == 0) return;
     Sound sound = soundsList[GameHost.Current.Random.Next(soundsList.Count)];
     if (beboo.Channel != null && stopOthers && beboo.Channel.IsPlaying) beboo.Channel.Stop();
     beboo.Channel = PlaySoundAtPosition(sound, beboo.VoicePosition, 0, beboo.VoicePitch);
@@ -576,7 +580,9 @@ public class SoundSystem
     // VoiceId is the mod creature's id when there is one, otherwise the built in type's name.
     if (sounds.TryGetValue(beboo.VoiceId, out List<Sound>? soundsList) && soundsList.Count > 0)
       return soundsList;
-    return sounds[BebooType.Base.ToString()];
+    // The base voice, if it is there. Indexing it directly threw KeyNotFoundException for any
+    // category the base voice does not have, which is a crash where silence would do.
+    return sounds.TryGetValue(BebooType.Base.ToString(), out List<Sound>? fallback) ? fallback : [];
   }
 
   public Channel PlaySoundAtPosition(Sound sound, Vector3 position, double volumeModifier = 0, float pitch = 1)

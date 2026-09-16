@@ -55,10 +55,18 @@ public sealed class MainActivity : Activity, AudioManager.IOnAudioFocusChangeLis
   private static MainActivity? _current;
 
   private BebooNotifier? _notifier;
-  private TouchInputFrame? _input;
-  private GardenView? _surface;
-  private DateTime _lastStepAt = DateTime.MinValue;
-  private CancellationTokenSource? _ticking;
+  private static TouchInputFrame? _input;
+  /// <summary>
+  /// The tick belongs to the process, like the game it drives.
+  ///
+  /// These were per-activity, which was wrong the moment the game stopped being: a recreated
+  /// activity started its own loop and had no handle on the previous one to cancel, so both ran
+  /// against the same game. Everything then happened twice - every beboo updated twice as often,
+  /// and every sound they make came out twice.
+  /// </summary>
+  private static GardenView? _surface;
+  private static DateTime _lastStepAt = DateTime.MinValue;
+  private static CancellationTokenSource? _ticking;
   private AudioFocusRequestClass? _focusRequest;
 
   protected override void OnCreate(Bundle? savedInstanceState)
@@ -186,7 +194,7 @@ public sealed class MainActivity : Activity, AudioManager.IOnAudioFocusChangeLis
     }
   }
 
-  private void StartTicking()
+  private static void StartTicking()
   {
     _ticking?.Cancel();
     _ticking = new CancellationTokenSource();
@@ -216,7 +224,7 @@ public sealed class MainActivity : Activity, AudioManager.IOnAudioFocusChangeLis
   /// Keeps walking while a flick is being held, at the same rate a held arrow key moves on the
   /// desktop. Crossing a sixty-square garden is then a flick and a wait, not sixty flicks.
   /// </summary>
-  private void WalkIfHeld()
+  private static void WalkIfHeld()
   {
     if (_game is null || _game.Paused) return;
     if (_surface?.HeldDirection is not System.Numerics.Vector3 direction) return;
@@ -262,13 +270,16 @@ public sealed class MainActivity : Activity, AudioManager.IOnAudioFocusChangeLis
 
   protected override void OnDestroy()
   {
-    _ticking?.Cancel();
+    // Not cancelled unconditionally: a replacement activity may already have been created and
+    // started its own loop, and Android does not promise to destroy this one first. OnPause has
+    // stopped the tick already in every case that matters.
     if (ReferenceEquals(_current, this)) _current = null;
 
     // Only tear the game down when it is really finishing. A recreated activity gets the same
     // game back, and releasing FMOD here would take the sound with it.
     if (IsFinishing)
     {
+      _ticking?.Cancel();
       try { _game?.WriteSave(); } catch (Exception error) { Record("closing down", error); }
       try { _game?.SoundSystem.Close(); } catch (Exception error) { Record("sound shutdown", error); }
       _speech?.Shutdown();

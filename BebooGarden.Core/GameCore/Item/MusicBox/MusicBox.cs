@@ -109,6 +109,9 @@ public class MusicBox : Item
   public override void BebooAction(Beboo beboo)
   {
     base.BebooAction(beboo);
+    // A player who has not unlocked a roll yet has none, and Random.Next(0) is 0 - so a beboo
+    // wandering into the music box indexed an empty list and took the tick down with it.
+    if (AvailableRolls.Count == 0) return;
     string rollName = AvailableRolls[GameHost.Current.Random.Next(AvailableRolls.Count)];
     Roll? roll = Array.Find(AllRolls, roll => roll.Title + roll.Source == rollName);
     roll?.Play();
