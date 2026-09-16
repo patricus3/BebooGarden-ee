@@ -125,7 +125,9 @@ public sealed class MainActivity : Activity, AudioManager.IOnAudioFocusChangeLis
       // runs the opening sequence or drops them into the garden they already had. Saying a welcome
       // line here instead, which is what this used to do, announced something and then left the
       // player in a world that had never actually been started.
-      RunOnUiThread(() => GameStart.Begin(_game));
+      // On the game thread, not the UI thread: Begin runs the opening sequence, which plays
+      // music and may play a cinematic, and a cinematic blocks until it has finished.
+      _game.Post(() => GameStart.Begin(_game));
     }
     catch (Exception error)
     {
@@ -141,6 +143,8 @@ public sealed class MainActivity : Activity, AudioManager.IOnAudioFocusChangeLis
   /// Appends a crash to the log the player can reach. Never throws: this is what runs when things
   /// have already gone wrong.
   /// </summary>
+  internal static void RecordFault(string origin, Exception? error) => Record(origin, error);
+
   private static void Record(string origin, Exception? error)
   {
     if (error == null) return;

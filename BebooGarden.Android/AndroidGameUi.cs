@@ -129,8 +129,17 @@ public sealed class AndroidGameUi : IGameUi
         activity,
         title,
         labels,
-        i => onChosen(values[i]),
-        allowCancel ? () => onChosen(default) : null);
+        i => OnGameThread(() => onChosen(values[i])),
+        allowCancel ? () => OnGameThread(() => onChosen(default)) : null);
+  }
+
+  /// <summary>
+  /// Answers come back on the UI thread, and what the game does with them may block on a sound.
+  /// </summary>
+  private static void OnGameThread(Action work)
+  {
+    if (GameHost.Current is AndroidGame game) game.Post(work);
+    else work();
   }
 
   private sealed class CancelListener(Action onCancel)

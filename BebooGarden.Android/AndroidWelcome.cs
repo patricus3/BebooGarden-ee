@@ -41,7 +41,7 @@ internal sealed class AndroidWelcome
   }
 
   /// <summary>Speaks a line and waits for a double tap. Nothing to look at: the line is the screen.</summary>
-  private void Say(string line, Action next) => AudioMenu.Say(_activity, line, next);
+  private void Say(string line, Action next) => AudioMenu.Say(_activity, line, () => OnGameThread(next));
 
   private void AskName()
       => AskText(BebooText.ui_yourname, 12, name =>
@@ -82,6 +82,16 @@ internal sealed class AndroidWelcome
             () => Say(string.Format(Controls.Welcome2, _answers.PlayerName), Finish));
       });
 
+  /// <summary>
+  /// Every answer arrives on the UI thread, and what the game does next plays music or a cinematic
+  /// - which blocks until the sound ends. That is an ANR if it happens on Android's main thread.
+  /// </summary>
+  private static void OnGameThread(Action work)
+  {
+    if (GameHost.Current is AndroidGame game) game.Post(work);
+    else work();
+  }
+
   private static Dictionary<string, string> Desserts() => new()
   {
     { BebooText.chocolatekake, "chocolatekake" },
@@ -105,7 +115,11 @@ internal sealed class AndroidWelcome
           .SetTitle(question)!
           .SetView(input)!
           .SetPositiveButton(Android.Resource.String.Ok,
-              (_, _) => onAnswered(input.Text?.Trim() ?? string.Empty))!
+              (_, _) =>
+              {
+                string typed = input.Text?.Trim() ?? string.Empty;
+                OnGameThread(() => onAnswered(typed));
+              })!
           .SetCancelable(false)!
           .Show();
     });
@@ -115,6 +129,6 @@ internal sealed class AndroidWelcome
   {
     string[] labels = [.. options.Keys];
     string[] values = [.. options.Values];
-    AudioMenu.Show(_activity, question, labels, i => onAnswered(values[i]));
+    AudioMenu.Show(_activity, question, labels, i => OnGameThread(() => onAnswered(values[i])));
   }
 }

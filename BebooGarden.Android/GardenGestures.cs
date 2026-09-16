@@ -25,6 +25,18 @@ public enum GardenGesture
   Inventory,
   /// <summary>Double tap: take what is on the ground, or use a gate or the shop.</summary>
   Use,
+  /// <summary>Two-finger stroke up or down: pet the beboo here, or shake a tree.</summary>
+  Pet,
+  /// <summary>Two-finger stroke left: rock a carried beboo that way.</summary>
+  RockLeft,
+  /// <summary>Two-finger stroke right: rock a carried beboo that way.</summary>
+  RockRight,
+  /// <summary>Three-finger stroke down: say again where you are and what is here.</summary>
+  WhereAmI,
+  /// <summary>Three-finger press and hold: choose a beboo to call by name.</summary>
+  CallByName,
+  /// <summary>Back: open the menu.</summary>
+  Menu,
 }
 
 /// <summary>
@@ -88,10 +100,34 @@ internal sealed class GardenGestures
 
       case MotionEventActions.Move:
       {
-        if (_maxFingers > 1 || _longPressSent) return true;
+        if (_longPressSent) return true;
 
         float dx = e.GetX() - _downX;
         float dy = e.GetY() - _downY;
+
+        // Two and three fingers stroke rather than walk. Petting a beboo is a stroke in real life
+        // and it is a stroke here; rocking one is the same sideways motion the desktop asks for
+        // with enter and alternating arrows.
+        if (_maxFingers >= 2)
+        {
+          if (Math.Abs(dx) <= FlickThreshold && Math.Abs(dy) <= FlickThreshold) return true;
+
+          bool sideways = Math.Abs(dx) > Math.Abs(dy);
+          GardenGesture stroke = _maxFingers >= 3
+              ? GardenGesture.WhereAmI
+              : sideways
+                  ? (dx > 0 ? GardenGesture.RockRight : GardenGesture.RockLeft)
+                  : GardenGesture.Pet;
+
+          _flicked = true;
+          CancelPendingTap();
+          _on(stroke);
+
+          // Re-anchor, so stroking back and forth keeps petting rather than firing once.
+          _downX = e.GetX();
+          _downY = e.GetY();
+          return true;
+        }
 
         if (Math.Abs(dx) > FlickThreshold || Math.Abs(dy) > FlickThreshold)
         {
@@ -144,7 +180,12 @@ internal sealed class GardenGestures
         if (longPress)
         {
           if (!_longPressSent)
-            _on(_maxFingers >= 2 ? GardenGesture.Inventory : GardenGesture.BebooState);
+            _on(_maxFingers switch
+            {
+              >= 3 => GardenGesture.CallByName,
+              2 => GardenGesture.Inventory,
+              _ => GardenGesture.BebooState,
+            });
           return true;
         }
 

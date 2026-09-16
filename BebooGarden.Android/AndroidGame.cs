@@ -9,6 +9,7 @@ using BebooGarden.MiniGames;
 using BebooGarden.Minigame;
 using BebooGarden.Save;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
@@ -43,6 +44,30 @@ public sealed class AndroidGame : IGame
   public IGameUi Ui { get; }
 
   public bool Paused { get; private set; }
+
+  /// <summary>
+  /// Work handed over from the UI thread, run on the next tick.
+  ///
+  /// Nothing the player does may run on Android's main thread. Plenty of the game blocks it for as
+  /// long as a sound lasts - PlayCinematic spins until the channel finishes, MusicFadeOut sleeps in
+  /// quarter-second steps - which is entirely reasonable on a desktop game loop and is an
+  /// Application Not Responding dialog on a phone. Hatching the first egg plays a cinematic, so
+  /// this was not a corner case: it was the first thing a new player does.
+  /// </summary>
+  private readonly ConcurrentQueue<Action> _pending = new();
+
+  /// <summary>Hands work to the game thread. Safe to call from anywhere.</summary>
+  public void Post(Action work) => _pending.Enqueue(work);
+
+  /// <summary>Runs whatever the UI thread handed over. Called once per tick, on the game thread.</summary>
+  private void DrainPending()
+  {
+    while (_pending.TryDequeue(out Action? work))
+    {
+      try { work(); }
+      catch (Exception error) { MainActivity.RecordFault("player action", error); }
+    }
+  }
 
   public AndroidGame(IGameUi ui)
   {
@@ -86,6 +111,7 @@ public sealed class AndroidGame : IGame
   /// </summary>
   public void Update()
   {
+    DrainPending();
     if (Paused || Map is null) return;
 
     foreach (Beboo beboo in Map.Beboos.ToList())
