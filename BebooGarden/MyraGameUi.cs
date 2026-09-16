@@ -16,6 +16,8 @@ internal sealed class MyraGameUi : IGameUi
 {
   public void ShowWelcome() => new WelcomeScene().Show();
 
+  public void ShowShop() => Game1.Instance.ShowShop();
+
   public void ShowNewBeboo(Beboo beboo) => new NewBebooScene(beboo).Show();
 
   public void ShowRaceResult(

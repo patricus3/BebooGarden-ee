@@ -4,6 +4,7 @@ using BebooGarden.GameCore.Pet;
 using BebooGarden.GameCore.Speech;
 using BebooGarden.GameCore.World;
 using BebooGarden.MiniGames;
+using BebooGarden.Minigame;
 using BebooGarden.Modding;
 using System;
 using System.Collections.Generic;
@@ -105,7 +106,17 @@ public static class PlayerActions
       return;
     }
 
-    BebooUnderCursor(game)?.GetPetted();
+    Beboo? beboo = BebooUnderCursor(game);
+    if (beboo is null)
+    {
+      // Petting empty air said nothing at all, and beboos wander - so somebody stroking away at a
+      // beboo that had walked off got the same silence as petting that was not working. Whichever
+      // it is, they need to know which.
+      game.SoundSystem.System.PlaySound(game.SoundSystem.WallSound);
+      return;
+    }
+
+    beboo.GetPetted();
   }
 
   public static void TakeOrPutDownBeboo(IGame game)
@@ -292,6 +303,108 @@ public static class PlayerActions
       game.ItemInHand = chosen;
       game.SoundSystem.System.PlaySound(game.SoundSystem.MenuOkSound);
       Voice.Current.Say(chosen.Name);
+    });
+  }
+
+  /// <summary>
+  /// What the space bar does, and what a tap does: put down what is held, wake or feed the beboo
+  /// here, act on whatever is underfoot, and whistle when there is nothing else to do.
+  ///
+  /// Shared rather than written twice. The phone had its own copy of this and it had already
+  /// drifted - it shook a tree where the desktop does nothing, because shaking is enter and the
+  /// arrows there. One copy means the phone cannot quietly become a different game.
+  /// </summary>
+  public static void Interact(IGame game)
+  {
+    if (game.ItemInHand != null)
+    {
+      TryPutItemInHand(game);
+      return;
+    }
+
+    Beboo? beboo = BebooUnderCursor(game);
+    if (beboo != null)
+    {
+      if (beboo.Sleeping) Whistle(game);
+      else FeedBeboo(game);
+      return;
+    }
+
+    // Standing in the trees, space does nothing: shaking them is its own motion.
+    if (game.Map?.GetTreeLineAtPosition(game.PlayerPosition) != null) return;
+
+    Item.Item? here = game.Map?.GetItemArroundPosition(game.PlayerPosition);
+    if (here != null) here.Action();
+    else Whistle(game);
+  }
+
+  /// <summary>
+  /// What enter does, and what a double tap does: take what is lying here, or use whatever is -
+  /// the shop, the race gate, a path to another map.
+  /// </summary>
+  public static void UseHere(IGame game)
+  {
+    if (game.Map is null) return;
+
+    MapConnexion? connexion = game.Map.GetConnexionArroundPosition(game.PlayerPosition);
+    Item.Item? takable = game.BebooInArms is null
+        ? game.Map.GetTakableItemArroundPosition(game.PlayerPosition)
+        : null;
+
+    if (takable != null)
+    {
+      TakeFromGround(game, takable);
+      return;
+    }
+
+    // Nothing on the map is reachable while a race is on.
+    if (Race.IsARaceRunning) return;
+
+    if (game.Save.Flags.UnlockShop && game.Map.IsArroundShop(game.PlayerPosition))
+    {
+      game.Ui.ShowShop();
+      return;
+    }
+
+    if (game.Map.IsArroundRaceGate(game.PlayerPosition))
+    {
+      Competitions.ShowMenu(game);
+      return;
+    }
+
+    if (connexion?.Map.IsUnlocked() ?? false) TravelThrough(game, connexion);
+  }
+
+  /// <summary>
+  /// Offers the beboos by name and calls the one chosen. What the number keys do on a desktop,
+  /// for anywhere there is no row of numbers to press.
+  /// </summary>
+  public static void CallBebooByName(IGame game)
+  {
+    if (game.Map is null || game.Map.Beboos.Count == 0)
+    {
+      Voice.Current.Say(BebooText.nobeboo);
+      return;
+    }
+
+    if (game.Map.Beboos.Count == 1)
+    {
+      CallBeboo(game, 1);
+      return;
+    }
+
+    Dictionary<string, int> byName = [];
+    for (int i = 0; i < game.Map.Beboos.Count; i++)
+    {
+      // Two beboos may share a name; the number keeps them apart in a spoken list.
+      string label = game.Map.Beboos[i].Name;
+      if (byName.ContainsKey(label)) label += $" {i + 1}";
+      byName[label] = i + 1;
+    }
+
+    game.Ui.Choose<int>(BebooText.choosebeboo, byName, chosen =>
+    {
+      if (chosen > 0) CallBeboo(game, chosen);
     });
   }
 

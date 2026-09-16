@@ -198,25 +198,8 @@ public partial class Game1
     }
     if (IsKeyPressed(currentKeyboardState, Keys.Enter))
     {
-      var mapConnexion = Map?.GetConnexionArroundPosition(PlayerPosition);
-      Item? takable = BebooInArms == null ? Map?.GetTakableItemArroundPosition(PlayerPosition) : null;
-      if (takable != null) TakeFromGround(takable);
-      else if (Race.IsARaceRunning)
-      {
-        // Nothing on the map is reachable while a race is on.
-      }
-      else if (Save.Flags.UnlockShop && (Map?.IsArroundShop(PlayerPosition) ?? false))
-      {
-        ShowShop();
-      }
-      else if (Map?.IsArroundRaceGate(PlayerPosition) ?? false)
-      {
-        ShowCompetitionMenu();
-      }
-      else if (mapConnexion?.Map.IsUnlocked() ?? false)
-      {
-        TravelBetwieen(Map.Preset, mapConnexion.MapPreset);
-      }
+      // Shared with the phone's double tap; see GameCore.PlayerActions.UseHere.
+      GameCore.PlayerActions.UseHere(this);
     }
     if (currentKeyboardState.GetPressedKeyCount() > 0)
     {
@@ -240,33 +223,8 @@ public partial class Game1
     }
     if (IsKeyPressed(currentKeyboardState, Keys.Space))
     {
-      if (ItemInHand != null)
-      {
-        TryPutItemInHand();
-      }
-      else
-      {
-        Beboo? bebooUnderCursor = BebooUnderCursor();
-        if (bebooUnderCursor != null)
-        {
-          if (bebooUnderCursor.Sleeping) Whistle();
-          else
-          {
-            FeedBeboo();
-          }
-        }
-        else if (Map?.GetTreeLineAtPosition(PlayerPosition) != null)
-        {
-        }
-        else if (itemUnderCursor != null)
-        {
-          itemUnderCursor.Action();
-        }
-        else
-        {
-          Whistle();
-        }
-      }
+      // Shared with the phone's tap; see GameCore.PlayerActions.Interact.
+      GameCore.PlayerActions.Interact(this);
     }
     if (IsKeyPressed(currentKeyboardState, Keys.F4) && IsKeyPressed(currentKeyboardState, Keys.LeftAlt, Keys.RightAlt))
     {

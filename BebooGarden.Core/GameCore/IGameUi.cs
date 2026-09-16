@@ -28,6 +28,12 @@ public interface IGameUi
   /// <summary>The scene that introduces a beboo that has just hatched.</summary>
   void ShowNewBeboo(Beboo beboo);
 
+  /// <summary>
+  /// The shop. Still only built on the desktop; the phone says so rather than going quiet, which
+  /// on a game played by ear is the difference between "not yet" and "this is broken".
+  /// </summary>
+  void ShowShop();
+
   /// <summary>The podium at the end of a race. Each tuple is (contester index, score).</summary>
   void ShowRaceResult(
       (int, double) third,

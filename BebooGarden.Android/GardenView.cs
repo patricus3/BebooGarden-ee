@@ -118,8 +118,8 @@ internal sealed class GardenView : View
         PlayerActions.SayBasketState(game);
         break;
 
-      case GardenGesture.Interact: Interact(game); break;
-      case GardenGesture.Use: Use(game); break;
+      case GardenGesture.Interact: PlayerActions.Interact(game); break;
+      case GardenGesture.Use: PlayerActions.UseHere(game); break;
 
       case GardenGesture.Pet: PlayerActions.ShakeOrPetAtPlayerPosition(game); break;
       case GardenGesture.Feed: PlayerActions.FeedBeboo(game); break;
@@ -128,108 +128,9 @@ internal sealed class GardenView : View
       case GardenGesture.RockRight: PlayerActions.SwayBebooInArms(game, false); break;
 
       case GardenGesture.WhereAmI: PlayerActions.SpeakObjectUnderCursor(game); break;
-      case GardenGesture.CallByName: CallByName(game); break;
+      case GardenGesture.CallByName: PlayerActions.CallBebooByName(game); break;
       case GardenGesture.Menu: Voice.Current.Say(Tips(), interrupt: true); break;
     }
   }
 
-  /// <summary>
-  /// Offers the beboos by name, and calls the one chosen - what the number keys do on a desktop,
-  /// where you cannot see a row of numbers to press.
-  /// </summary>
-  private static void CallByName(IGame game)
-  {
-    if (game.Map is null || game.Map.Beboos.Count == 0)
-    {
-      Voice.Current.Say(BebooText.nobeboo);
-      return;
-    }
-
-    if (game.Map.Beboos.Count == 1)
-    {
-      PlayerActions.CallBeboo(game, 1);
-      return;
-    }
-
-    Dictionary<string, int> byName = [];
-    for (int i = 0; i < game.Map.Beboos.Count; i++)
-    {
-      // Two beboos may share a name; the number keeps them apart in the list.
-      string label = game.Map.Beboos[i].Name;
-      if (byName.ContainsKey(label)) label += $" {i + 1}";
-      byName[label] = i + 1;
-    }
-
-    game.Ui.Choose<int>(BebooText.choosebeboo, byName, chosen =>
-    {
-      if (chosen > 0) PlayerActions.CallBeboo(game, chosen);
-    });
-  }
-
-  /// <summary>
-  /// What the space bar does on a desktop: put down what is held, pet or feed a beboo, act on
-  /// whatever is underfoot, and whistle when there is nothing else to do.
-  /// </summary>
-  private static void Interact(IGame game)
-  {
-    if (game.ItemInHand != null)
-    {
-      PlayerActions.TryPutItemInHand(game);
-      return;
-    }
-
-    Beboo? beboo = PlayerActions.BebooUnderCursor(game);
-    if (beboo != null)
-    {
-      // What space does on the desktop: wake a sleeping one, feed a waking one. Petting has a
-      // stroke of its own here, so a tap does not have to stand in for it any more.
-      if (beboo.Sleeping) PlayerActions.Whistle(game);
-      else PlayerActions.FeedBeboo(game);
-      return;
-    }
-
-    if (game.Map?.GetTreeLineAtPosition(game.PlayerPosition) != null)
-    {
-      PlayerActions.ShakeOrPetAtPlayerPosition(game);
-      return;
-    }
-
-    Item? here = game.Map?.GetItemArroundPosition(game.PlayerPosition);
-    if (here != null) here.Action();
-    else PlayerActions.Whistle(game);
-  }
-
-  /// <summary>
-  /// What enter does on a desktop: take what is lying here, or go through whatever is here, or
-  /// enter a competition. The shop is still desktop-only and says its name rather than going quiet.
-  /// </summary>
-  private static void Use(IGame game)
-  {
-    if (game.Map is null) return;
-
-    Item? takable = game.BebooInArms is null
-        ? game.Map.GetTakableItemArroundPosition(game.PlayerPosition)
-        : null;
-    if (takable != null)
-    {
-      PlayerActions.TakeFromGround(game, takable);
-      return;
-    }
-
-    MapConnexion? connexion = game.Map.GetConnexionArroundPosition(game.PlayerPosition);
-    if (connexion?.Map.IsUnlocked() ?? false)
-    {
-      PlayerActions.TravelThrough(game, connexion);
-      return;
-    }
-
-    if (game.Save.Flags.UnlockShop && game.Map.IsArroundShop(game.PlayerPosition))
-    {
-      Voice.Current.Say(BebooText.shop);
-      return;
-    }
-
-    if (game.Map.IsArroundRaceGate(game.PlayerPosition))
-      Competitions.ShowMenu(game);
-  }
 }

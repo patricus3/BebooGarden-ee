@@ -532,25 +532,27 @@ public partial class Beboo
     }
     _petCount++;
     GameHost.Current.SoundSystem.PlayBebooSound(GameHost.Current.SoundSystem.BebooPetSound, this, false);
+
+    // Comforting climbs on every stroke, not every third or fourth. Happiness floors at -10 and
+    // crying stops at CHEEREDUPAT, so even at one per delight a beboo at the bottom took half a
+    // minute of unbroken stroking to console - long enough that it reads as not working at all,
+    // which is the opposite of what comforting something should feel like. Once it is content
+    // again the delight gate takes over and happiness climbs slowly, as before.
+    if (Happiness < CHEEREDUPAT)
+    {
+      Happiness++;
+      if (Happiness >= CHEEREDUPAT) _petCount = PetsBeforeDelight;
+    }
+
     if (_petCount + GameHost.Current.Random.Next(2) >= PetsBeforeDelight)
     {
       GameHost.Current.SoundSystem.PlayBebooSound(GameHost.Current.SoundSystem.BebooDelightSounds, this);
-      // Comforting a crying beboo always works. The coin flip is there to make happiness climb
-      // gently when things are already fine, which is right - but happiness floors at -10 and
-      // crying only stops at CHEEREDUPAT, so a beboo at the bottom needed thirteen successful
-      // pets, at a coin flip each and 800ms between, to be consoled at all. That is over a minute
-      // of stroking a crying animal with no sign it is helping, which is not what the mechanic is
-      // for. Sad beboos are consoled reliably; happy ones still warm up slowly.
-      bool consoling = Happiness < CHEEREDUPAT;
-      if (Happiness <= 7 && (consoling || GameHost.Current.Random.Next(2) == 1))
+      // A contented beboo warms up slowly; the coin flip is what makes it gradual. Consoling a sad
+      // one is handled above, on every stroke.
+      if (Happiness <= 7 && Happiness >= CHEEREDUPAT && GameHost.Current.Random.Next(2) == 1)
       {
         Happiness++;
-        // The jingle marks a beboo cheering up, so it belongs at the end of that and not every few
-        // pets on the way. Sounding it over a beboo that is still crying - which is what consoling
-        // one reliably made it do - is just noise on top of the delight sound already cutting the
-        // crying short.
-        if (!consoling)
-          GameHost.Current.SoundSystem.System.PlaySound(GameHost.Current.SoundSystem.JingleComplete);
+        GameHost.Current.SoundSystem.System.PlaySound(GameHost.Current.SoundSystem.JingleComplete);
       }
 
       _petCount = 0;

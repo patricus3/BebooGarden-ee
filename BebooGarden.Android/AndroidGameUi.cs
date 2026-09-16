@@ -29,6 +29,13 @@ public sealed class AndroidGameUi : IGameUi
 
   public AndroidGameUi(Func<Activity?> activity) => _activity = activity;
 
+  /// <summary>
+  /// Not built on this head yet. Said out loud rather than passed over in silence: on a game
+  /// played by ear those are the same thing, and one of them is a bug report.
+  /// </summary>
+  public void ShowShop() => Voice.Current.Say(
+      $"{BebooText.shop}. Not on the phone yet.", interrupt: true);
+
   /// <summary>The opening sequence. See <see cref="AndroidWelcome"/>.</summary>
   public void ShowWelcome()
   {
