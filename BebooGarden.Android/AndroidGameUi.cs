@@ -75,10 +75,10 @@ public sealed class AndroidGameUi : IGameUi
             string name = input.Text?.Trim() ?? "";
             if (name.Length == 0) return;
             beboo.Name = name;
-            if (GameHost.Current.Save.Flags.NewGame)
+            if (!GameHost.Current.Save.Flags.TipsShown)
             {
               Voice.Current.Say(string.Format(Controls.QuickTips, name));
-              GameHost.Current.Save.Flags.NewGame = false;
+              GameHost.Current.Save.Flags.TipsShown = true;
             }
           })!
           .SetCancelable(false)!

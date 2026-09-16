@@ -88,6 +88,8 @@ public partial class Game1
     SetPreviousKeyboardStates(_currentKeyboardState, currentMouseState);
     SoundSystem.UpdateWaterPoints(Map, PlayerPosition);
     SoundSystem.System.Update();
+    // A crash or a power cut should cost a couple of minutes, not the whole session.
+    BebooGarden.Save.AutoSave.Tick(this);
     base.Update(gameTime);
   }
 

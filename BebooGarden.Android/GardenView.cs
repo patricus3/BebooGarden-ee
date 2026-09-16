@@ -193,8 +193,8 @@ internal sealed class GardenView : View
   }
 
   /// <summary>
-  /// What enter does on a desktop: take what is lying here, or go through whatever is here.
-  /// The shop and the race gate are not built on this head yet and say so rather than going quiet.
+  /// What enter does on a desktop: take what is lying here, or go through whatever is here, or
+  /// enter a competition. The shop is still desktop-only and says its name rather than going quiet.
   /// </summary>
   private static void Use(IGame game)
   {
@@ -223,6 +223,6 @@ internal sealed class GardenView : View
     }
 
     if (game.Map.IsArroundRaceGate(game.PlayerPosition))
-      Voice.Current.Say(BebooText.competition_closed);
+      Competitions.ShowMenu(game);
   }
 }

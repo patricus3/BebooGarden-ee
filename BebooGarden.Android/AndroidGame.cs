@@ -129,6 +129,10 @@ public sealed class AndroidGame : IGame
     foreach (Item item in Map.Items.ToList()) item?.Update();
 
     SoundSystem.System.Update();
+
+    // Android kills a backgrounded app whenever it wants the memory, without asking, so saving
+    // only on the way out is not enough here.
+    AutoSave.Tick(this);
   }
 
   public void MovePlayerTo(Vector3 position)
@@ -200,9 +204,5 @@ public sealed class AndroidGame : IGame
   public void SwitchToScreen(GameScreen screen) => CurrentScreen = screen;
 
   /// <summary>Writes the garden down. Called when the activity is going away.</summary>
-  public void WriteSave()
-  {
-    if (Map is null) return;
-    SaveCapture.Write(this);
-  }
+  public void WriteSave() => AutoSave.Now(this);
 }

@@ -1,4 +1,4 @@
-using BebooGarden.GameCore.Item;
+﻿using BebooGarden.GameCore.Item;
 using BebooGarden.GameCore.World;
 using System;
 using System.Linq;
@@ -52,8 +52,9 @@ public static class GameStart
   /// Takes what the opening sequence collected and makes it true, then opens the garden. Both
   /// heads call this at the end of their own presentation.
   ///
-  /// NewGame deliberately stays set: it is turned off when the first beboo hatches and is named,
-  /// which is a different scene, and turning it off here would skip the quick tips.
+  /// Clears NewGame, because from here there is a garden worth keeping. It used to stay set until
+  /// the first beboo was named, which meant quitting in between threw the whole garden away and
+  /// started the opening sequence over. Whether the tips have been seen is Flags.TipsShown now.
   /// </summary>
   public static void FinishWelcome(IGame game, WelcomeAnswers answers)
   {
@@ -65,6 +66,7 @@ public static class GameStart
     game.Save.Dessert = answers.Dessert ?? string.Empty;
 
     PutEggOfFavoredColor(game);
+    game.Save.Flags.NewGame = false;
 
     game.ChangeMapMusic();
     game.SwitchToScreen(GameScreen.game);

@@ -73,98 +73,13 @@ public partial class Game1
   /// The competition centre's front desk: pick a contest, then who competes, then any options that
   /// contest has. Every contest spends from the same daily allowance.
   /// </summary>
-  public void ShowCompetitionMenu()
-  {
-    if (!Competition.IsAnyOpen())
-    {
-      SoundSystem.System.PlaySound(SoundSystem.WarningSound);
-      CrossSpeakManager.Instance.Output(BebooText.competition_closed);
-      return;
-    }
-    if (Map == null || Map.Beboos.Count == 0)
-    {
-      CrossSpeakManager.Instance.Output(BebooText.nobeboo);
-      SoundSystem.System.PlaySound(SoundSystem.WarningSound);
-      return;
-    }
-    Dictionary<string, CompetitionType> options = [];
-    foreach (var (name, type) in new[]
-             {
-               (BebooText.competition_race, CompetitionType.Race),
-               (BebooText.jump_name, CompetitionType.Jump),
-             })
-    {
-      options.Add(String.Format(BebooText.competition_entry, name,
-          Competition.GetRemainingTriesToday(type)), type);
-    }
-    new ChooseMenu<CompetitionType>(BebooText.competition_choose, options, OnCompetitionChosen)
-      .Show();
-  }
+  /// <summary>
+  /// The race gate. Choosing an event, a beboo and a track is shared with the Android head; see
+  /// GameCore.Competitions.
+  /// </summary>
+  public void ShowCompetitionMenu() => GameCore.Competitions.ShowMenu(this);
 
-  private void OnCompetitionChosen(CompetitionType competitionType)
-  {
-    if (competitionType == CompetitionType.None) return;
-    _competitionType = competitionType;
-    ChooseBebooForCompetition();
-  }
-
-  public void ChooseBebooForCompetition()
-  {
-    if (Map?.Beboos.Count > 0)
-    {
-      if (Map.Beboos.Count > 1)
-      {
-        Dictionary<string, Beboo> options = new();
-        foreach (Beboo b in Map.Beboos)
-          options.Add(b.Name, b);
-        new ChooseMenu<Beboo?>(BebooText.choosebeboo, options, StartCompetition)
-          .Show();
-      }
-      else { StartCompetition(Map?.Beboos[0]); }
-    }
-    else
-    {
-      CrossSpeakManager.Instance.Output(BebooText.nobeboo);
-      SoundSystem.System.PlaySound(SoundSystem.WarningSound);
-    }
-  }
-
-  private void StartCompetition(Beboo? contester)
-  {
-    if (contester == null) return;
-    if (!Competition.IsOpen(_competitionType))
-    {
-      SoundSystem.System.PlaySound(SoundSystem.WarningSound);
-      CrossSpeakManager.Instance.Output(BebooText.competition_closed);
-      return;
-    }
-    _contester = contester;
-    if (_competitionType == CompetitionType.Jump)
-    {
-      StartMiniGame(new JumpContest(contester));
-      return;
-    }
-    Dictionary<string, RaceType> raceTypeOptions = new()
-    {
-      { BebooText.race_simple, RaceType.Base },
-    };
-    if (Save.Flags.UnlockSnowyMap) raceTypeOptions.Add(BebooText.race_snow, RaceType.Snowy);
-    if (raceTypeOptions.Count > 1)
-    {
-      new ChooseMenu<RaceType>(BebooText.race_chooserace, raceTypeOptions, OnRaceChoosed)
-        .Show();
-    }
-    else
-    {
-      OnRaceChoosed(RaceType.Base);
-    }
-  }
-
-  private void OnRaceChoosed(RaceType raceType)
-  {
-    if (raceType == RaceType.None || _contester == null) return;
-    StartMiniGame(new Minigame.Race(raceType, _contester));
-  }
+  public void ChooseBebooForCompetition() => GameCore.Competitions.ShowMenu(this);
 
   private void StartMiniGame(IMiniGame miniGame)
   {

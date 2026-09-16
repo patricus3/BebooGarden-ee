@@ -94,14 +94,14 @@ public class NewBebooScene : IScriptedScene
       Game1.Instance._desktop.FocusedKeyboardWidget = _textField;
       _textBoxShowed = true;
     }
-    else if (_bebooName!=String.Empty && Game1.Instance.Save.Flags.NewGame)
+    else if (_bebooName != String.Empty && !Game1.Instance.Save.Flags.TipsShown)
     {
       _quickTipsDialog = new TalkDialog(String.Format(GameCore.Controls.QuickTips, _bebooName), GameScreen.ScriptedScene);
       _quickTipsDialog.Show();
       _tipsDialogShowed = true;
-      Game1.Instance.Save.Flags.NewGame = false;
+      Game1.Instance.Save.Flags.TipsShown = true;
     }
-    else if (Game1.Instance.Save.Flags.NewGame && _tipsDialogShowed || _bebooName != String.Empty)
+    else if (!Game1.Instance.Save.Flags.TipsShown && _tipsDialogShowed || _bebooName != String.Empty)
     {
       Close();
     }

@@ -20,7 +20,9 @@ public class SaveManager
   {
     GameHost.Current.SoundSystem.LoadMenuSounds();
     SaveParameters parameters = LoadJson() ?? new SaveParameters();
-    //if (parameters.Flags.NewGame) Welcome.BeforeGarden(parameters);
+    // Saves written before TipsShown existed have no value for it. Anyone already past the
+    // opening sequence has long since been told how to play, so do not tell them again.
+    if (!parameters.Flags.NewGame) parameters.Flags.TipsShown = true;
     return parameters;
   }
 
