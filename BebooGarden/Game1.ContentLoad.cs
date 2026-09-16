@@ -99,17 +99,8 @@ public partial class Game1
     else StartTheGarden();
   }
 
-  private void StartTheGarden()
-  {
-    Modding.ModHost.StartEnabledMods();
-    if (Save.Flags.NewGame)
-    {
-      (new WelcomeScene()).Show();
-    }
-    else
-    {
-      ChangeMapMusic();
-      SwitchToScreen(GameScreen.game);
-    }
-  }
+  /// <summary>
+  /// Opening the garden is shared with the Android head; see GameCore.GameStart.
+  /// </summary>
+  private void StartTheGarden() => GameCore.GameStart.Begin(this);
 }

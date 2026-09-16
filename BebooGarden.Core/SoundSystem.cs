@@ -235,7 +235,7 @@ public class SoundSystem
   }
   public void LoadMainScreen()
   {
-    NeutralMusicStream = System.CreateStream(CONTENTFOLDER + "music/neutral.mp3", Mode.Loop_Normal);
+    NeutralMusicStream = System.CreateStream(CONTENTFOLDER + "music/Neutral.mp3", Mode.Loop_Normal);
     SadMusicStream = System.CreateStream(CONTENTFOLDER + "music/Depressed.mp3", Mode.Loop_Normal);
     ShopMusicStream = System.CreateStream(CONTENTFOLDER + "music/Boutique.mp3", Mode.Loop_Normal);
     SnowyMusicStream = System.CreateStream(CONTENTFOLDER + "music/snowy.mp3", Mode.Loop_Normal);
@@ -460,7 +460,7 @@ public class SoundSystem
 
   public void LoadAmbiSounds()
   {
-    string[] files = Directory.GetFiles(CONTENTFOLDER + "Sounds/birds/", "*.*");
+    string[] files = Directory.GetFiles(CONTENTFOLDER + "sounds/birds/", "*.*");
     foreach (string file in files)
     {
       Sound sound = System.CreateSound(file, Mode._3D | Mode._3D_LinearSquareRolloff);

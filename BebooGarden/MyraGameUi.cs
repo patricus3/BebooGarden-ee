@@ -1,4 +1,4 @@
-using BebooGarden.GameCore;
+﻿using BebooGarden.GameCore;
 using BebooGarden.GameCore.Pet;
 using BebooGarden.Interface.UI;
 using BebooGarden.MiniGames;
@@ -14,6 +14,8 @@ namespace BebooGarden;
 /// </summary>
 internal sealed class MyraGameUi : IGameUi
 {
+  public void ShowWelcome() => new WelcomeScene().Show();
+
   public void ShowNewBeboo(Beboo beboo) => new NewBebooScene(beboo).Show();
 
   public void ShowRaceResult(

@@ -1,0 +1,30 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+  <!--
+    Android 11 made packages invisible to each other by default. A speech engine is another app,
+    so without this the game cannot see any of them: TextToSpeech.getEngines() comes back empty and
+    the constructor falls back to whatever the system will hand over, which in practice means
+    Google's engine no matter what the player actually chose.
+
+    That is the opposite of what this game wants. Blind players very often run RHVoice, eSpeak-NG,
+    Vocalizer or Acapela, sometimes paid for, and their choice should be honoured. Declaring the
+    TTS_SERVICE intent makes those engines visible again, so the player's own default is used and
+    the engine picker has something to list.
+  -->
+  <queries>
+    <intent>
+      <action android:name="android.intent.action.TTS_SERVICE" />
+    </intent>
+  </queries>
+
+  <!--
+    Android 13 and later will not show a notification without this being granted at run time.
+    Declared here and asked for in MainActivity; the game works perfectly well if it is refused,
+    it just cannot tell you a beboo has been alone for a while.
+  -->
+  <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+  <application android:allowBackup="true" />
+
+</manifest>

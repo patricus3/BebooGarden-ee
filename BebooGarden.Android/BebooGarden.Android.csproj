@@ -48,14 +48,17 @@
 	    lib/android/fmod.jar  org.fmod.FMOD, which must be handed the Context before any system
 	                          can be created - that is how FMOD reaches the audio device and the
 	                          asset manager. Without it System_Create returns ERR_INTERNAL and
-	                          says nothing else. Bind=true generates the C# so MainActivity can
-	                          call Org.Fmod.FMOD.Init.
+	                          says nothing else. Bind=false on purpose: generating a C# binding
+	                          for it stopped the activity's JNI methods being registered at all,
+	                          so every launch died with UnsatisfiedLinkError on n_onCreate before
+	                          any managed code ran. The jar still ships, putting the classes in
+	                          the dex, and FmodJava calls them through JNI by name.
 
 	  Conditioned so the project still builds with neither present: everything except the audio
 	  can be worked on without them.
 	-->
 	<ItemGroup Condition="Exists('lib\android\fmod.jar')">
-		<AndroidLibrary Include="lib\android\fmod.jar" Bind="true" />
+		<AndroidLibrary Include="lib\android\fmod.jar" Bind="false" />
 	</ItemGroup>
 
 	<!--

@@ -1,4 +1,4 @@
-using BebooGarden.GameCore.Pet;
+﻿using BebooGarden.GameCore.Pet;
 using BebooGarden.MiniGames;
 using System;
 using System.Collections.Generic;
@@ -16,6 +16,15 @@ namespace BebooGarden.GameCore;
 /// </summary>
 public interface IGameUi
 {
+  /// <summary>
+  /// The opening sequence for a brand new game: asks the player their name, favourite colour and
+  /// the rest, then calls GameStart.FinishWelcome with what it collected.
+  ///
+  /// The head owns the asking because the desktop draws it and a phone speaks it, but neither
+  /// decides what the answers mean - that is FinishWelcome, shared.
+  /// </summary>
+  void ShowWelcome();
+
   /// <summary>The scene that introduces a beboo that has just hatched.</summary>
   void ShowNewBeboo(Beboo beboo);
 

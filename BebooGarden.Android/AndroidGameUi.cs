@@ -1,4 +1,4 @@
-using Android.App;
+﻿using Android.App;
 using Android.Content;
 using Android.Text;
 using Android.Widget;
@@ -28,6 +28,14 @@ public sealed class AndroidGameUi : IGameUi
   private readonly Func<Activity?> _activity;
 
   public AndroidGameUi(Func<Activity?> activity) => _activity = activity;
+
+  /// <summary>The opening sequence. See <see cref="AndroidWelcome"/>.</summary>
+  public void ShowWelcome()
+  {
+    Activity? activity = _activity();
+    if (activity is null) return;
+    new AndroidWelcome(activity).Run();
+  }
 
   /// <summary>
   /// A beboo has hatched: say which colour came out of the shell - the one moment the player is

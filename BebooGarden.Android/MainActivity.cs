@@ -70,6 +70,15 @@ public sealed class MainActivity : Activity, AudioManager.IOnAudioFocusChangeLis
     _speech = new AndroidSpeech(this);
     Voice.Use(_speech);
 
+    // Android 13+ will not show a notification without this. Asked for here rather than at the
+    // moment one is due, because that moment is when the app is being closed and no dialog can
+    // be shown. Refusing it costs only the notification; the garden is unaffected.
+    if (OperatingSystem.IsAndroidVersionAtLeast(33) &&
+        CheckSelfPermission(Android.Manifest.Permission.PostNotifications) != Permission.Granted)
+    {
+      RequestPermissions([Android.Manifest.Permission.PostNotifications], 1);
+    }
+
     _notifier = new BebooNotifier(this);
     // Whatever was pending is no longer true: you are here.
     _notifier.CancelPending();
@@ -98,7 +107,7 @@ public sealed class MainActivity : Activity, AudioManager.IOnAudioFocusChangeLis
       // asset manager. Without this, System_Create returns ERR_INTERNAL and says nothing else.
       // The native side needs no configuring: the bindings P/Invoke against "fmod" and Android
       // resolves that to libfmod.so out of the apk's own native library directory.
-      Org.Fmod.FMOD.Init(this);
+      FmodJava.Init(this);
 
       _game = new AndroidGame(new AndroidGameUi(() => this));
       GameHost.Use(_game);
@@ -107,7 +116,11 @@ public sealed class MainActivity : Activity, AudioManager.IOnAudioFocusChangeLis
       RequestAudioFocus();
       StartTicking();
 
-      RunOnUiThread(() => Voice.Current.Say(Content.BebooText.welcome ?? "Welcome to your garden.", interrupt: true));
+      // Opening the garden is shared with the desktop: it starts the player's mods and then either
+      // runs the opening sequence or drops them into the garden they already had. Saying a welcome
+      // line here instead, which is what this used to do, announced something and then left the
+      // player in a world that had never actually been started.
+      RunOnUiThread(() => GameStart.Begin(_game));
     }
     catch (Exception error)
     {
@@ -201,7 +214,7 @@ public sealed class MainActivity : Activity, AudioManager.IOnAudioFocusChangeLis
     _ticking?.Cancel();
     _speech?.Shutdown();
     // Hands back what Init took. Paired with the call in Boot.
-    try { Org.Fmod.FMOD.Close(); } catch (Exception error) { Record("fmod shutdown", error); }
+    try { FmodJava.Close(); } catch (Exception error) { Record("fmod shutdown", error); }
     base.OnDestroy();
   }
 

@@ -203,16 +203,16 @@ public class WelcomeScene : IScriptedScene
 
   private void Finish()
   {
-    var save = Game1.Instance.Save;
-    save.PlayerName = _yourName;
-    save.FavoredColor = _favoredColor ?? "none";
-    save.FreeTime = _freeTime;
-    save.Dessert = _dessert ?? string.Empty;
-    PutEggOfFavoredColor();
-    // NewGame stays set until the beboo hatches and gets named; that scene turns it off.
+    // What the answers mean is decided in Core, so the phone reaches exactly the same garden from
+    // its own version of this sequence. This scene's job ends at collecting them.
     Game1.Instance._scriptedScene = null;
-    Game1.Instance.ChangeMapMusic();
-    Game1.Instance.SwitchToScreen(GameScreen.game);
+    GameCore.GameStart.FinishWelcome(Game1.Instance, new GameCore.WelcomeAnswers
+    {
+      PlayerName = _yourName,
+      FavoredColor = _favoredColor,
+      FreeTime = _freeTime,
+      Dessert = _dessert,
+    });
   }
 
   /// <summary>
