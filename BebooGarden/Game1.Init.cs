@@ -51,62 +51,10 @@ public partial class Game1
     catch (Exception) { Map = Map.Garden; }
     MusicBox.AvailableRolls = Save.UnlockedRolls ?? [];
     SoundSystem.LoadMainScreen();
-    if (!Save.Flags.NewGame)
-    {
-      ApplyLanguage(Save.Language);
-      PlayerPosition = new Vector3(0, 0, 0);
-      foreach (Map map in Map.Maps.Values)
-      {
-        if (map.TreeLines.Count > 0) 
-          map.TreeLines[0].SetFruitsAfterAWhile(Save.LastPlayed, Save.MapInfos.GetValueOrDefault(map.Preset, Save.MapInfos[0]).RemainingFruits);
-        try
-        {
-          map.Items = Save.MapInfos[map.Preset].Items;
-        }
-        catch
-        {
-          map.Items = [];
-        }
-        try
-        {
-          foreach (BebooInfo bebooInfo in Save.MapInfos[map.Preset].BebooInfos)
-          {
-            if (bebooInfo.Name != "bob" && bebooInfo.Name != "boby")
-            {
-              BebooType bebootype;
-              if (bebooInfo.BebooType != BebooType.Base)
-                bebootype = bebooInfo.BebooType;
-              else
-              {
-                bebootype = Random.Next(2) == 1 && Save.FavoredColor != "none"
-                  ? Util.GetBebooTypeByColor(Save.FavoredColor)
-                  : Util.GetRandomBebooType();
-              }
-              Beboo beboo = new(bebooInfo.Name, bebootype, bebooInfo.Age, Save.LastPlayed, bebooInfo.Happiness, bebooInfo.Energy, bebooInfo.SwimLevel, false, bebooInfo.Voice, bebooInfo.Trait)
-              {
-                KnowItsName = bebooInfo.KnowItsName || bebooInfo.Age >= 2,
-                ModCreature = bebooInfo.ModCreature,
-              };
-              map.Beboos.Add(beboo);
-              if (map != Map) beboo.Pause();
-            }
-          }
-        }
-        catch (KeyNotFoundException) { }
-        if (map != Map) SoundSystem.Pause(map);
-      }
-    }
-    else
-    {
-      PlayerPosition = new Vector3(-2, 0, 0);
-      Map.AddItem(new Egg(Save.FavoredColor), new(2, 0, 0));
-    }
-    SoundSystem.LoadMap(Map);
-    ChangeMapMusic();
-    //if (Save.Flags.NewGame) Welcome.AfterGarden();
-    //else UpdateMapMusic();
-    SoundSystem.MusicVolume = Save.MusicLevel ?? 1f;
-    SoundSystem.MusicMuted = Save.MusicMuted;
+    // Putting a loaded save back into the world is shared with the Android head; see
+    // Save.SaveRestore. Language stays here: the desktop asks, a phone already knows.
+    if (!Save.Flags.NewGame) ApplyLanguage(Save.Language);
+    BebooGarden.Save.SaveRestore.Apply(this);
     LastPressedKeyTime = DateTime.Now;
     if (Save.FruitsBasket == null || Save.FruitsBasket.Count == 0)
     {

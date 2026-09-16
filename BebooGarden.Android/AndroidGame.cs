@@ -102,7 +102,11 @@ public sealed class AndroidGame : IGame
 
     MusicBox.AvailableRolls = Save.UnlockedRolls ?? [];
     SoundSystem.LoadMainScreen();
-    PlayerPosition = new Vector3(0, 0, 0);
+
+    // Reading the save is only half of loading a game. This is the half that puts the beboos and
+    // the things on the ground back where they were; without it every launch built an empty
+    // garden and the player's beboos looked lost.
+    SaveRestore.Apply(this);
   }
 
   /// <summary>
