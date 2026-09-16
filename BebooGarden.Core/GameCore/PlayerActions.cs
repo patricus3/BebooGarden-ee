@@ -213,6 +213,52 @@ public static class PlayerActions
     game.PlayerPosition = new Vector3(0, 0, 0);
   }
 
+  /// <summary>
+  /// Offers a beboo something from the fruit basket.
+  ///
+  /// The beboo is captured before the asking rather than looked up again afterwards. It used to be
+  /// found a second time once a fruit had been chosen, and beboos walk about: choose slowly and the
+  /// fruit went to whichever one had wandered over, or to nobody at all while still being taken out
+  /// of the basket.
+  /// </summary>
+  public static void FeedBeboo(IGame game)
+  {
+    Beboo? beboo = BebooUnderCursor(game);
+    if (beboo is null || game.Save.FruitsBasket is null) return;
+
+    Dictionary<string, FruitSpecies> options = [];
+    foreach ((FruitSpecies species, int count) in game.Save.FruitsBasket)
+      if (count > 0) options.Add($"{species} {count}", species);
+
+    if (options.Count == 0)
+    {
+      // Used to do nothing whatsoever, which is indistinguishable from the game ignoring you.
+      game.SoundSystem.System.PlaySound(game.SoundSystem.WarningSound);
+      Voice.Current.Say(string.Format(BebooText.ui_basket, 0));
+      return;
+    }
+
+    if (options.Count == 1)
+    {
+      Feed(game, beboo, options.First().Value);
+      return;
+    }
+
+    game.Ui.Choose<FruitSpecies>(BebooText.ui_chooseitem, options, chosen =>
+    {
+      if (chosen != FruitSpecies.None) Feed(game, beboo, chosen);
+    });
+  }
+
+  private static void Feed(IGame game, Beboo beboo, FruitSpecies fruit)
+  {
+    if (game.Save.FruitsBasket is null) return;
+    if (!game.Save.FruitsBasket.TryGetValue(fruit, out int held) || held <= 0) return;
+
+    beboo.Eat(fruit);
+    game.Save.FruitsBasket[fruit] = held - 1;
+  }
+
   // --- Calling -------------------------------------------------------------
 
   /// <summary>Whistles. Some of the beboos wake and start heading for where the player stands.</summary>

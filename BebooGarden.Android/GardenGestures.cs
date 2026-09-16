@@ -37,6 +37,8 @@ public enum GardenGesture
   CallByName,
   /// <summary>Back: open the menu.</summary>
   Menu,
+  /// <summary>Two-finger double tap: offer the beboo here a fruit.</summary>
+  Feed,
 }
 
 /// <summary>
@@ -61,6 +63,7 @@ internal sealed class GardenGestures
   private readonly Handler _handler = new(Looper.MainLooper!);
   private Action? _pendingTap;
   private long _lastTapAt;
+  private long _lastTwoFingerTapAt;
 
   private float _downX, _downY;
   private long _downAt;
@@ -189,10 +192,34 @@ internal sealed class GardenGestures
           return true;
         }
 
-        if (_maxFingers >= 2)
+        if (_maxFingers >= 3)
         {
-          // Multi-finger taps are unambiguous, so they fire at once.
-          _on(_maxFingers >= 3 ? GardenGesture.Whistle : GardenGesture.CarryBeboo);
+          // Three fingers is unambiguous, so it fires at once.
+          _on(GardenGesture.Whistle);
+          return true;
+        }
+
+        if (_maxFingers == 2)
+        {
+          // Two fingers carries two meanings, so it waits out the double-tap window like one
+          // finger does: once picks the beboo up, twice offers it a fruit.
+          if (now - _lastTwoFingerTapAt <= ViewConfiguration.DoubleTapTimeout)
+          {
+            CancelPendingTap();
+            _lastTwoFingerTapAt = 0;
+            _on(GardenGesture.Feed);
+            return true;
+          }
+
+          _lastTwoFingerTapAt = now;
+          _pendingTap = () => _on(GardenGesture.CarryBeboo);
+          Action carry = _pendingTap;
+          _handler.PostDelayed(() =>
+          {
+              if (!ReferenceEquals(_pendingTap, carry)) return;
+              _pendingTap = null;
+              carry();
+          }, ViewConfiguration.DoubleTapTimeout);
           return true;
         }
 

@@ -58,6 +58,7 @@ internal sealed class GardenView : View
       Keycode.F => GardenGesture.BebooState,
       Keycode.T or Keycode.G => GardenGesture.Inventory,
       Keycode.C => GardenGesture.CallByName,
+      Keycode.E => GardenGesture.Feed,
       _ => null,
     };
 
@@ -78,6 +79,7 @@ internal sealed class GardenView : View
       "Stroke up or down with two fingers to pet your beboo, or to shake a tree. " +
       "Stroke left and right with two fingers to rock the beboo you are carrying. " +
       "Two finger tap picks a beboo up, and puts it down. " +
+      "Two finger double tap offers it a fruit. " +
       "Three finger tap whistles and calls your beboos. " +
       "Stroke with three fingers to hear again where you are. " +
       "Press and hold to hear how your beboos are. " +
@@ -118,6 +120,7 @@ internal sealed class GardenView : View
       case GardenGesture.Use: Use(game); break;
 
       case GardenGesture.Pet: PlayerActions.ShakeOrPetAtPlayerPosition(game); break;
+      case GardenGesture.Feed: PlayerActions.FeedBeboo(game); break;
       case GardenGesture.RockLeft: PlayerActions.SwayBebooInArms(game, true); break;
       case GardenGesture.RockRight: PlayerActions.SwayBebooInArms(game, false); break;
 
@@ -175,9 +178,10 @@ internal sealed class GardenView : View
     Beboo? beboo = PlayerActions.BebooUnderCursor(game);
     if (beboo != null)
     {
-      // A sleeping beboo is woken rather than fed; feeding needs it awake to eat.
+      // What space does on the desktop: wake a sleeping one, feed a waking one. Petting has a
+      // stroke of its own here, so a tap does not have to stand in for it any more.
       if (beboo.Sleeping) PlayerActions.Whistle(game);
-      else PlayerActions.ShakeOrPetAtPlayerPosition(game);
+      else PlayerActions.FeedBeboo(game);
       return;
     }
 

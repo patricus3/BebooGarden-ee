@@ -37,35 +37,8 @@ public partial class Game1
 
   private void SayBebooState() => GameCore.PlayerActions.SayBebooState(this);
 
-  private void FeedBeboo()
-  {
-    Beboo? bebooUnderCursor = BebooUnderCursor();
-    if (Save.FruitsBasket == null || bebooUnderCursor == null) return;
-    Dictionary<string, FruitSpecies> options = [];
-    foreach (KeyValuePair<FruitSpecies, int> fruit in Save.FruitsBasket)
-    {
-      if (fruit.Value > 0) options.Add(fruit.Key.ToString() + " " + fruit.Value.ToString(), fruit.Key);
-    }
-    if (options.Count == 1)
-    {
-      OnFruitSelected(options.First().Value);
-    }
-    else if (options.Count > 0)
-    {
-      new ChooseMenu<FruitSpecies>(BebooText.ui_chooseitem, options, OnFruitSelected)
-       .Show();
-    }
-  }
-
-  private void OnFruitSelected(FruitSpecies choice)
-  {
-    if (choice != FruitSpecies.None)
-    {
-      Beboo? bebooUnderCursor = BebooUnderCursor();
-      bebooUnderCursor?.Eat(choice);
-      Save.FruitsBasket[choice]--;
-    }
-  }
+  /// <summary>Offering a fruit is shared with the Android head; see GameCore.PlayerActions.</summary>
+  private void FeedBeboo() => GameCore.PlayerActions.FeedBeboo(this);
 
   private CompetitionType _competitionType = CompetitionType.None;
 
