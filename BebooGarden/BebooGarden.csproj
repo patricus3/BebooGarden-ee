@@ -34,8 +34,16 @@
 		<Content Include="Content\**" Exclude="Content\bin\**;Content\obj\**">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</Content>
+		<!--
+		  Always, not PreserveNewest. These are vendor binaries, and they arrive carrying the vendor's
+		  own build date: fmod.dll 2.03.14 is stamped May 2026, which is older than the copy already
+		  sitting in the output folder from a build in September. PreserveNewest compares timestamps
+		  and nothing else, so it decided the old 2.02 dll was up to date and skipped it - and the
+		  game then started against a native library a whole minor version behind its bindings and
+		  died with ERR_HEADER_MISMATCH. It is under two megabytes; copying it every time is free.
+		-->
 		<Content Include="lib\**">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
 		</Content>
 		<Content Include="mods\**">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

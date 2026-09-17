@@ -55,6 +55,12 @@ echo [1/5] Publishing the game to %PAYLOAD%
 dotnet publish BebooGarden\BebooGarden.csproj -c %CONFIG% -r win-x64 --self-contained false -o "%PAYLOAD%" --nologo
 if errorlevel 1 goto :fail
 
+rem Before anything is packaged: FMOD will not start if its native library and its bindings differ,
+rem and it fails at launch rather than at build, so a mismatch ships and is only found by a player.
+rem 3.0b1 went out that way.
+powershell -NoProfile -ExecutionPolicy Bypass -File "tools\check_fmod_version.ps1" -Dll "%PAYLOAD%\lib\fmod.dll"
+if errorlevel 1 goto :fail
+
 rem --- 2. Standalone mods --------------------------------------------------
 rem Each mod writes its dll straight into its own folder next to mod.json, so the
 rem packaged mod is that one file. Loop, so a new mod needs no edit here.
