@@ -25,7 +25,7 @@
 
 #define AppName "Beboo Garden: Enhanced Edition"
 #define AppShortName "Beboo Garden"
-#define AppVersion "3.0b2"
+#define AppVersion "3.0b3"
 ; Windows will only take four numbers in a file version resource, so a release named
 ; 3.0b1 needs a numeric one alongside the name people actually see.
 #define AppVersionNumeric "3.0.0.0"

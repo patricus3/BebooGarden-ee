@@ -29,7 +29,7 @@
 		<!-- Assembly versions must be numeric; the name of the build is the informational
 		     one, and that is what the installer and the apk show. -->
 		<Version>3.0.0</Version>
-		<InformationalVersion>3.0b2</InformationalVersion>
+		<InformationalVersion>3.0b3</InformationalVersion>
 		<!-- The audio and the text live beside the game, not inside this assembly. -->
 		<EnableDefaultContentItems>false</EnableDefaultContentItems>
 		<!-- The resx items below are declared explicitly, with pinned LogicalNames. -->

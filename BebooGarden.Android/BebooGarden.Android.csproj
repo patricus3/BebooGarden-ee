@@ -19,8 +19,8 @@
 		<LangVersion>preview</LangVersion>
 		<RootNamespace>BebooGarden.Droid</RootNamespace>
 		<ApplicationId>com.patricusprod.beboo.enhanced</ApplicationId>
-		<ApplicationVersion>3</ApplicationVersion>
-		<ApplicationDisplayVersion>3.0b2</ApplicationDisplayVersion>
+		<ApplicationVersion>4</ApplicationVersion>
+		<ApplicationDisplayVersion>3.0b3</ApplicationDisplayVersion>
 		<Product>Beboo Garden: Enhanced Edition</Product>
 		<Company>Saladeuh</Company>
 		<!-- Mods are loaded with Assembly.LoadFrom at run time, which full AOT and trimming would
